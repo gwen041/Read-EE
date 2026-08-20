@@ -8,4 +8,10 @@ Testing faster-whisper transcription to determine a suitable speech recognition 
 - inaccurate mispronounced words
 - tested with audios that have background noises
 
-## currently testing small.en
+## small.en model observations
+
+- ignored repeated words
+- produced more detailed transcription
+- tested with the same audios
+
+## currently testing to improve the transcription accuracy
