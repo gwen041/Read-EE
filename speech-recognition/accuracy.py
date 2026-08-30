@@ -8,6 +8,28 @@ def normalize_words(text):
     for word in text.split()
   ]
 
+def generate_explanation(missing, extra, mismatch):
+
+  errors = []
+
+  if missing > 0:
+    errors.append(f"skipped {missing} word{'s' if missing != 1 else ''}")
+
+  if mismatch > 0:
+    errors.append(f"misread {mismatch} word{'s' if mismatch != 1 else ''}")
+
+  if extra > 0:
+    errors.append(f"added {extra} extra word{'s' if extra != 1 else ''}")
+
+  if not errors:
+    return "The student read all words correctly."
+
+  if len(errors) == 1:
+    return "The student " + errors[0] + "."
+
+  return "The student " + ", ".join(errors[:-1]) + ", and " + errors[-1] + "."
+
+
 def calculate_accuracy(expected, student):
 
   expected_words = normalize_words(expected)
@@ -130,6 +152,11 @@ def calculate_accuracy(expected, student):
   else:
     accuracy = 0  
 
+  explanation = generate_explanation(
+    missing,
+    extra,
+    mismatch
+  )
   # Store the results
   result = {
     "accuracy": round(accuracy, 2),
@@ -139,7 +166,8 @@ def calculate_accuracy(expected, student):
     "extra": extra,
     "mismatch_words": mismatch_words,
     "missing_words": missing_words,
-    "extra_words": extra_words
+    "extra_words": extra_words,
+    "explanation": explanation
   }
 
   print("\nResults:")
@@ -148,7 +176,7 @@ def calculate_accuracy(expected, student):
   print("Missing:", missing)
   print("Extra:", extra)
   print("Accuracy:", round(accuracy, 2), "%")
-
+  print("Explanation:", explanation)
   print("\nErrors:")
 
   if missing_words:
@@ -166,9 +194,8 @@ def calculate_accuracy(expected, student):
 
 # Test
 expected = "The little boy walked to the school early in the morning. He carried his books in a blue bag and greeted his teacher at the classroom door."
-student = transcribe_audio('audio/slow.wav')
+student = transcribe_audio('audio/skipped.wav')
 
 result = calculate_accuracy(expected, student)
 print("\nResult object:")
 print(result)
-
