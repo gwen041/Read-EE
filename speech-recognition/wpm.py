@@ -10,12 +10,12 @@ def calculate_wpm(word_timestamps):
   first_word_start = word_timestamps[0]['start']
   last_word_end = word_timestamps[-1]['end']
 
-  reading_time_seconds = last_word_end - first_word_start
+  reading_time_seconds = float(last_word_end - first_word_start)
   reading_time_minutes = reading_time_seconds / 60
 
   word_count = len(word_timestamps)
 
-  wpm = word_count / reading_time_minutes
+  wpm = float(word_count / reading_time_minutes)
 
   return {
     "word_count": word_count,

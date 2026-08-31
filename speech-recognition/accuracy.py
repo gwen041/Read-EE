@@ -192,10 +192,17 @@ def calculate_accuracy(expected, student):
 
   return result
 
-# Test
-expected = "The little boy walked to the school early in the morning. He carried his books in a blue bag and greeted his teacher at the classroom door."
-student = transcribe_audio('audio/repeated.wav')
+if __name__ == "__main__":
 
-result = calculate_accuracy(expected, student)
-print("\nResult object:")
-print(result)
+  # Test
+  expected = (
+    "The little boy walked to the school early in the morning. "
+    "He carried his books in a blue bag and greeted his teacher "
+    "at the classroom door."
+  )
+  student, word_timestamps = transcribe_audio('audio/repeated.wav')
+
+  result = calculate_accuracy(expected, student)
+  
+  print("\nResult object:")
+  print(result)
