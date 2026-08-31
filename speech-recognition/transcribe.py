@@ -17,6 +17,7 @@ def transcribe_audio(audio_path):
   )
 
   student_words = []
+  word_timestamps = []
 
   print('Detected language:', info.language)
   print('Language probability:', info.language_probability)
@@ -35,14 +36,30 @@ def transcribe_audio(audio_path):
 
         student_words.append(word.word.strip())
 
+        word_timestamps.append({
+          'word': word.word.strip(),
+          'start': word.start,
+          'end': word.end
+        })
+
   student_text = " ".join(student_words)
 
-  return student_text
+  return student_text, word_timestamps
 
 if __name__ == "__main__":
 
-  student_text = transcribe_audio('audio/normal.wav')
+  student_text, word_timestamps = transcribe_audio('audio/normal.wav')
 
   print()
   print("Student transcript:")
   print(student_text)
+
+  print()
+  print("Word timestamps: ")
+
+  for word in word_timestamps:
+    print(
+      f"{word['start']:.2f}s - "
+      f"{word['end']:.2f}s : "
+      f"{word['word']}"
+    )
