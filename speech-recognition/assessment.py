@@ -3,10 +3,7 @@ from accuracy import calculate_accuracy
 from wpm import calculate_wpm
 from comprehension import calculate_comprehension
 from quiz_data import questions
-import pandas as pd
-import joblib
-
-model = joblib.load("ml/decision_tree_model.pkl")
+from ml.predict import predict_classification
 
 
 def run_assessment(audio_file, expected_text, student_answers):
@@ -25,13 +22,11 @@ def run_assessment(audio_file, expected_text, student_answers):
     student_answers
   )
 
-  features = pd.DataFrame([{
-    "accuracy": accuracy_result["accuracy"],
-    "wpm": wpm_result["wpm"],
-    "comprehension": comprehension_result["score"]
-  }])
-
-  prediction = model.predict(features)[0]
+  prediction = predict_classification(
+    accuracy_result["accuracy"],
+    wpm_result["wpm"],
+    comprehension_result["score"]
+  )
 
   return {
     "accuracy": accuracy_result,
