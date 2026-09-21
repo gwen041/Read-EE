@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'students_screen.dart';
 import 'materials_screen.dart';
+import 'reading_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -125,6 +126,20 @@ class DashboardScreen extends StatelessWidget {
                 );
               },
               child: const Text('Reading Materials'),
+            ),
+
+            const SizedBox(height: 10),
+
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ReadingScreen(),
+                  ),
+                );
+              },
+              child: const Text('START ASSESSMENT'),
             ),
 
             const SizedBox(height: 10),
