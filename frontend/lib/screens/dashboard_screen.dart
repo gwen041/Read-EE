@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'students_screen.dart';
+import 'materials_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -115,7 +116,14 @@ class DashboardScreen extends StatelessWidget {
             const SizedBox(height: 10),
 
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MaterialsScreen(),
+                  ),
+                );
+              },
               child: const Text('Reading Materials'),
             ),
 
