@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'results_screen.dart';
+
 
 class QuizScreen extends StatefulWidget {
   const QuizScreen({super.key});
@@ -73,19 +75,25 @@ class _QuizScreenState extends State<QuizScreen> {
 
                           const SizedBox(height: 10),
 
-                          ...List<String>.from(question['choices'] as List)
-                              .map(
-                                (choice) => RadioListTile<String>(
-                                  title: Text(choice),
-                                  value: choice,
-                                  groupValue: answers[index],
-                                  onChanged: (value) {
-                                    setState(() {
-                                      answers[index] = value!;
-                                    });
-                                  },
-                                ),
-                              ),
+                          RadioGroup<String>(
+                            groupValue: answers[index],
+                            onChanged: (value) {
+                              setState(() {
+                                answers[index] = value!;
+                              });
+                            },
+                            child: Column(
+                              children: [
+                                ...List<String>.from(question['choices'] as List)
+                                    .map(
+                                      (choice) => RadioListTile<String>(
+                                        title: Text(choice),
+                                        value: choice,
+                                      ),
+                                    ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -98,7 +106,12 @@ class _QuizScreenState extends State<QuizScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // Quiz submission will be connected later.
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ResultsScreen(),
+                    ),
+                  );
                 },
                 child: const Text('SUBMIT QUIZ'),
               ),
