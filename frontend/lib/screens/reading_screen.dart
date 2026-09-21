@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'quiz_screen.dart';
 
 class ReadingScreen extends StatelessWidget {
   const ReadingScreen({super.key});
@@ -96,7 +97,14 @@ class ReadingScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const QuizScreen(),
+                    ),
+                  );
+                },
                 icon: const Icon(Icons.mic),
                 label: const Text('START RECORDING'),
               ),
