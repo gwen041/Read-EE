@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'dashboard_screen.dart';
-import 'register_screen.dart';
+import 'teacher_setup_screen.dart';
 
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatelessWidget {
+  const RegisterScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('READ-EE'),
+        title: const Text('Create Account'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -17,7 +16,7 @@ class LoginScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
-              'Teacher Login',
+              'Create Teacher Account',
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
@@ -25,6 +24,15 @@ class LoginScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 30),
+
+            TextField(
+              decoration: const InputDecoration(
+                labelText: 'Full Name',
+                border: OutlineInputBorder(),
+              ),
+            ),
+
+            const SizedBox(height: 20),
 
             TextField(
               decoration: const InputDecoration(
@@ -52,26 +60,12 @@ class LoginScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const DashboardScreen(),
+                      builder: (context) => const TeacherSetupScreen(),
                     ),
                   );
                 },
-                child: const Text('LOGIN'),
+                child: const Text('CONTINUE'),
               ),
-            ),
-
-            const SizedBox(height: 15),
-
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const RegisterScreen(),
-                  ),
-                );
-              },
-              child: const Text('CREATE ACCOUNT'),
             ),
           ],
         ),
