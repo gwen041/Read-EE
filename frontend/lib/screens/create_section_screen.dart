@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dashboard_screen.dart';
+import '../models/class_section.dart';
 
 class CreateSectionScreen extends StatefulWidget {
   final List<String> selectedGrades;
@@ -79,10 +80,25 @@ class _CreateSectionScreenState extends State<CreateSectionScreen> {
       return;
     }
 
+    final List<ClassSection> createdClasses = [];
+
+    for (final entry in sections.entries) {
+      for (final sectionName in entry.value) {
+        createdClasses.add(
+          ClassSection(
+            gradeLevel: entry.key,
+            sectionName: sectionName,
+          ),
+        );
+      }
+    }
+
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-        builder: (context) => const DashboardScreen(),
+        builder: (context) => DashboardScreen(
+          classes: createdClasses,
+        ),
       ),
       (route) => false,
     );

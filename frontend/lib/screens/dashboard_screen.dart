@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
-import 'students_screen.dart';
+import '../models/class_section.dart';
 import 'materials_screen.dart';
 import 'reading_screen.dart';
 import 'assessments_screen.dart';
+import 'classes_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key});
+  final List<ClassSection> classes;
+
+  const DashboardScreen({
+    super.key,
+    this.classes = const [],
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -108,11 +114,13 @@ class DashboardScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const StudentsScreen(),
+                    builder: (context) => ClassesScreen(
+                      classes: classes,
+                    ),
                   ),
                 );
               },
-              child: const Text('Manage Students'),
+              child: const Text('MY CLASSES'),
             ),
 
             const SizedBox(height: 10),
