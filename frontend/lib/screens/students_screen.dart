@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/class_section.dart';
+import 'import_students_screen.dart';
 
 class StudentsScreen extends StatefulWidget {
   final ClassSection classSection;
@@ -147,8 +148,23 @@ class _StudentsScreenState extends State<StudentsScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () {
-                  // Import feature will be added next.
+                onPressed: () async {
+                  final importedStudents =
+                      await Navigator.push<List<String>>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ImportStudentsScreen(
+                        classSection: widget.classSection,
+                        currentStudents: students,
+                      ),
+                    ),
+                  );
+
+                  if (importedStudents != null) {
+                    setState(() {
+                      students.addAll(importedStudents);
+                    });
+                  }
                 },
                 icon: const Icon(Icons.upload_file),
                 label: const Text('IMPORT STUDENTS'),
