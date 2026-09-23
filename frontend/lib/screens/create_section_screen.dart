@@ -51,7 +51,11 @@ class _CreateSectionScreenState extends State<CreateSectionScreen> {
       return;
     }
 
-    if (sections[grade]!.contains(sectionName)) {
+    final sectionExists = sections[grade]!.any(
+      (section) => section.toLowerCase() == sectionName.toLowerCase(),
+    );
+
+    if (sectionExists) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('That section already exists.'),
@@ -67,14 +71,17 @@ class _CreateSectionScreenState extends State<CreateSectionScreen> {
   }
 
   void finishSetup() {
-    final hasSections = sections.values.any(
-      (gradeSections) => gradeSections.isNotEmpty,
+    final missingGrades = widget.selectedGrades.where(
+      (grade) => sections[grade]!.isEmpty,
     );
 
-    if (!hasSections) {
+    if (missingGrades.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please create at least one section.'),
+        SnackBar(
+          content: Text(
+            'Please create at least one section for '
+            '${missingGrades.join(', ')}.',
+          ),
         ),
       );
       return;

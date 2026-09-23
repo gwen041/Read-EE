@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/class_section.dart';
+import 'students_screen.dart';
 
 class ClassesScreen extends StatelessWidget {
   final List<ClassSection> classes;
@@ -70,8 +71,19 @@ class ClassesScreen extends StatelessWidget {
                             classSection.sectionName,
                           ),
                           subtitle: const Text(
-                            'No students added yet',
+                            'Manage students',
                           ),
+                          trailing: const Icon(Icons.arrow_forward),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => StudentsScreen(
+                                  classSection: classSection,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
 

@@ -1,144 +1,157 @@
 import 'package:flutter/material.dart';
+import '../models/class_section.dart';
 
 class StudentsScreen extends StatefulWidget {
-  const StudentsScreen({super.key});
+  final ClassSection classSection;
+
+  const StudentsScreen({
+    super.key,
+    required this.classSection,
+  });
 
   @override
   State<StudentsScreen> createState() => _StudentsScreenState();
 }
 
 class _StudentsScreenState extends State<StudentsScreen> {
-  final List<Map<String, String>> students = [
-    {'name': 'Juan Dela Cruz', 'grade': 'Grade 4'},
-    {'name': 'Maria Santos', 'grade': 'Grade 5'},
-    {'name': 'Pedro Reyes', 'grade': 'Grade 6'},
-  ];
+  final List<String> students = [];
+
+  final TextEditingController studentController =
+      TextEditingController();
+
+  @override
+  void dispose() {
+    studentController.dispose();
+    super.dispose();
+  }
 
   void addStudent() {
-    final nameController = TextEditingController();
-    String selectedGrade = 'Grade 4';
+    final name = studentController.text.trim();
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text('Add Student'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Student Name',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    initialValue: selectedGrade,
-                    decoration: const InputDecoration(
-                      labelText: 'Grade Level',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'Grade 4',
-                        child: Text('Grade 4'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'Grade 5',
-                        child: Text('Grade 5'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'Grade 6',
-                        child: Text('Grade 6'),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      setDialogState(() {
-                        selectedGrade = value!;
-                      });
-                    },
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('CANCEL'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    if (nameController.text.trim().isEmpty) {
-                      return;
-                    }
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a student name.'),
+        ),
+      );
+      return;
+    }
 
-                    setState(() {
-                      students.add({
-                        'name': nameController.text.trim(),
-                        'grade': selectedGrade,
-                      });
-                    });
-
-                    Navigator.pop(context);
-                  },
-                  child: const Text('ADD'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+    final alreadyExists = students.any(
+      (student) => student.toLowerCase() == name.toLowerCase(),
     );
+
+    if (alreadyExists) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('That student is already in this class.'),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      students.add(name);
+      studentController.clear();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Students'),
+        title: Text(widget.classSection.sectionName),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Students',
-              style: TextStyle(
+            Text(
+              '${widget.classSection.gradeLevel} - '
+              '${widget.classSection.sectionName}',
+              style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 20),
+
+            const SizedBox(height: 10),
+
+            Text(
+              '${students.length} students',
+              style: const TextStyle(fontSize: 16),
+            ),
+
+            const SizedBox(height: 25),
+
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: studentController,
+                    decoration: const InputDecoration(
+                      labelText: 'Student Name',
+                      hintText: 'Enter student name',
+                      border: OutlineInputBorder(),
+                    ),
+                    onSubmitted: (_) => addStudent(),
+                  ),
+                ),
+
+                const SizedBox(width: 10),
+
+                ElevatedButton(
+                  onPressed: addStudent,
+                  child: const Text('ADD'),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 25),
 
             Expanded(
-              child: ListView.builder(
-                itemCount: students.length,
-                itemBuilder: (context, index) {
-                  final student = students[index];
-
-                  return Card(
-                    child: ListTile(
-                      title: Text(student['name']!),
-                      subtitle: Text(student['grade']!),
-                      trailing: const Icon(Icons.arrow_forward),
+              child: students.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'No students added yet.',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: students.length,
+                      itemBuilder: (context, index) {
+                        return Card(
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              child: Text('${index + 1}'),
+                            ),
+                            title: Text(students[index]),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () {
+                                setState(() {
+                                  students.removeAt(index);
+                                });
+                              },
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             ),
 
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: addStudent,
-                icon: const Icon(Icons.person_add),
-                label: const Text('ADD STUDENT'),
+                onPressed: () {
+                  // Import feature will be added next.
+                },
+                icon: const Icon(Icons.upload_file),
+                label: const Text('IMPORT STUDENTS'),
               ),
             ),
           ],
