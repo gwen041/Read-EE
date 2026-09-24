@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/class_section.dart';
-import 'import_students_screen.dart';
+import 'import_students_dialog.dart';
 
 class StudentsScreen extends StatefulWidget {
   final ClassSection classSection;
@@ -58,14 +58,16 @@ class _StudentsScreenState extends State<StudentsScreen> {
 
   Future<void> importStudents() async {
     final importedStudents =
-        await Navigator.push<List<String>>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ImportStudentsScreen(
-          classSection: widget.classSection,
-          currentStudents: widget.classSection.students,
-        ),
-      ),
+        await showDialog<List<String>>(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          child: ImportStudentsDialog(
+            classSection: widget.classSection,
+            currentStudents: widget.classSection.students,
+          ),
+        );
+      },
     );
 
     if (importedStudents != null) {

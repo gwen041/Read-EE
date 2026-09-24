@@ -1,26 +1,28 @@
 import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:universal_html/html.dart' as html;
 import 'package:flutter/material.dart';
+import 'package:universal_html/html.dart' as html;
 
 import '../models/class_section.dart';
 
-class ImportStudentsScreen extends StatefulWidget {
+class ImportStudentsDialog extends StatefulWidget {
   final ClassSection classSection;
   final List<String> currentStudents;
 
-  const ImportStudentsScreen({
+  const ImportStudentsDialog({
     super.key,
     required this.classSection,
     required this.currentStudents,
   });
 
   @override
-  State<ImportStudentsScreen> createState() => _ImportStudentsScreenState();
+  State<ImportStudentsDialog> createState() =>
+      _ImportStudentsDialogState();
 }
 
-class _ImportStudentsScreenState extends State<ImportStudentsScreen> {
+class _ImportStudentsDialogState
+    extends State<ImportStudentsDialog> {
   final List<String> importedStudents = [];
 
   int duplicateCount = 0;
@@ -52,11 +54,7 @@ class _ImportStudentsScreenState extends State<ImportStudentsScreen> {
       allowedExtensions: ['csv'],
     );
 
-    if (!mounted) {
-      return;
-    }
-
-    if (file == null) {
+    if (!mounted || file == null) {
       return;
     }
 
@@ -91,12 +89,12 @@ class _ImportStudentsScreenState extends State<ImportStudentsScreen> {
       return;
     }
 
-    final Set<String> existingNames = widget.currentStudents
+    final existingNames = widget.currentStudents
         .map((student) => student.toLowerCase())
         .toSet();
 
-    final Set<String> importedNames = {};
-    final List<String> validStudents = [];
+    final importedNames = <String>{};
+    final validStudents = <String>[];
 
     int duplicates = 0;
     int existing = 0;
@@ -148,41 +146,63 @@ class _ImportStudentsScreenState extends State<ImportStudentsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final totalDuplicates = duplicateCount + existingStudentCount;
+    final totalDuplicates =
+        duplicateCount + existingStudentCount;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Import Students'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: SizedBox(
+        width: 600,
+        height: 600,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Import Students',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+
             Text(
               '${widget.classSection.gradeLevel} - '
               '${widget.classSection.sectionName}',
               style: const TextStyle(
-                fontSize: 24,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
             ),
 
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
 
             const Text(
-              'Import students using the READ-EE CSV template.',
-              style: TextStyle(fontSize: 16),
+              'Use the READ-EE CSV template and paste only '
+              'the student names.',
             ),
 
-            const SizedBox(height: 25),
+            const SizedBox(height: 20),
 
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: downloadTemplate,
                 icon: const Icon(Icons.download),
-                label: const Text('DOWNLOAD CSV TEMPLATE'),
+                label: const Text(
+                  'DOWNLOAD CSV TEMPLATE',
+                ),
               ),
             ),
 
@@ -193,12 +213,14 @@ class _ImportStudentsScreenState extends State<ImportStudentsScreen> {
               child: ElevatedButton.icon(
                 onPressed: processImport,
                 icon: const Icon(Icons.upload_file),
-                label: const Text('SELECT CSV FILE'),
+                label: const Text(
+                  'SELECT CSV FILE',
+                ),
               ),
             ),
 
             if (totalDuplicates > 0) ...[
-              const SizedBox(height: 15),
+              const SizedBox(height: 12),
               Text(
                 '$totalDuplicates duplicate student(s) removed.',
                 style: const TextStyle(
@@ -207,17 +229,17 @@ class _ImportStudentsScreenState extends State<ImportStudentsScreen> {
               ),
             ],
 
-            const SizedBox(height: 25),
+            const SizedBox(height: 20),
 
             const Text(
               'Students to Import',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
 
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
 
             Expanded(
               child: importedStudents.isEmpty
@@ -237,20 +259,41 @@ class _ImportStudentsScreenState extends State<ImportStudentsScreen> {
                             leading: CircleAvatar(
                               child: Text('${index + 1}'),
                             ),
-                            title: Text(importedStudents[index]),
+                            title: Text(
+                              importedStudents[index],
+                            ),
                           ),
                         );
                       },
                     ),
             ),
 
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed:
-                    importedStudents.isEmpty ? null : confirmImport,
-                child: const Text('CONFIRM IMPORT'),
-              ),
+            const SizedBox(height: 12),
+
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text('CANCEL'),
+                  ),
+                ),
+
+                const SizedBox(width: 10),
+
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: importedStudents.isEmpty
+                        ? null
+                        : confirmImport,
+                    child: const Text(
+                      'CONFIRM IMPORT',
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
