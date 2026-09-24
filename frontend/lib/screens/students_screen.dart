@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/class_section.dart';
 import 'import_students_screen.dart';
 
@@ -15,8 +16,6 @@ class StudentsScreen extends StatefulWidget {
 }
 
 class _StudentsScreenState extends State<StudentsScreen> {
-  final List<String> students = [];
-
   final TextEditingController studentController =
       TextEditingController();
 
@@ -38,7 +37,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
       return;
     }
 
-    final alreadyExists = students.any(
+    final alreadyExists = widget.classSection.students.any(
       (student) => student.toLowerCase() == name.toLowerCase(),
     );
 
@@ -52,13 +51,34 @@ class _StudentsScreenState extends State<StudentsScreen> {
     }
 
     setState(() {
-      students.add(name);
+      widget.classSection.students.add(name);
       studentController.clear();
     });
   }
 
+  Future<void> importStudents() async {
+    final importedStudents =
+        await Navigator.push<List<String>>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ImportStudentsScreen(
+          classSection: widget.classSection,
+          currentStudents: widget.classSection.students,
+        ),
+      ),
+    );
+
+    if (importedStudents != null) {
+      setState(() {
+        widget.classSection.students.addAll(importedStudents);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final students = widget.classSection.students;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.classSection.sectionName),
@@ -148,24 +168,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () async {
-                  final importedStudents =
-                      await Navigator.push<List<String>>(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ImportStudentsScreen(
-                        classSection: widget.classSection,
-                        currentStudents: students,
-                      ),
-                    ),
-                  );
-
-                  if (importedStudents != null) {
-                    setState(() {
-                      students.addAll(importedStudents);
-                    });
-                  }
-                },
+                onPressed: importStudents,
                 icon: const Icon(Icons.upload_file),
                 label: const Text('IMPORT STUDENTS'),
               ),

@@ -1,17 +1,47 @@
 import 'package:flutter/material.dart';
+
 import '../models/class_section.dart';
 import 'materials_screen.dart';
 import 'reading_screen.dart';
 import 'assessments_screen.dart';
 import 'classes_screen.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   final List<ClassSection> classes;
 
   const DashboardScreen({
     super.key,
     this.classes = const [],
   });
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  int get totalStudents {
+    int total = 0;
+
+    for (final classSection in widget.classes) {
+      total += classSection.students.length;
+    }
+
+    return total;
+  }
+
+  Future<void> openClasses() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ClassesScreen(
+          classes: widget.classes,
+        ),
+      ),
+    );
+
+    // Rebuild the dashboard after returning from My Classes.
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,9 +66,7 @@ class DashboardScreen extends StatelessWidget {
 
             const Text(
               'Manage students and reading assessments.',
-              style: TextStyle(
-                fontSize: 16,
-              ),
+              style: TextStyle(fontSize: 16),
             ),
 
             const SizedBox(height: 30),
@@ -50,15 +78,17 @@ class DashboardScreen extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.all(20.0),
                       child: Column(
-                        children: const [
-                          Text(
+                        children: [
+                          const Text(
                             'Students',
                             style: TextStyle(fontSize: 18),
                           ),
-                          SizedBox(height: 10),
+
+                          const SizedBox(height: 10),
+
                           Text(
-                            '0',
-                            style: TextStyle(
+                            '$totalStudents',
+                            style: const TextStyle(
                               fontSize: 30,
                               fontWeight: FontWeight.bold,
                             ),
@@ -81,7 +111,9 @@ class DashboardScreen extends StatelessWidget {
                             'Assessments',
                             style: TextStyle(fontSize: 18),
                           ),
+
                           SizedBox(height: 10),
+
                           Text(
                             '0',
                             style: TextStyle(
@@ -110,16 +142,7 @@ class DashboardScreen extends StatelessWidget {
             const SizedBox(height: 15),
 
             ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ClassesScreen(
-                      classes: classes,
-                    ),
-                  ),
-                );
-              },
+              onPressed: openClasses,
               child: const Text('MY CLASSES'),
             ),
 
