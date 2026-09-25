@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/class_section.dart';
-import 'quiz_screen.dart';
+import 'recording_screen.dart';
 
 class ReadingScreen extends StatefulWidget {
   final List<ClassSection> classes;
@@ -208,8 +208,11 @@ class _ReadingScreenState extends State<ReadingScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                const QuizScreen(),
+                            builder: (context) => RecordingScreen(
+                              studentName: selectedStudent!,
+                              materialTitle: material['title']!,
+                              passage: material['passage']!,
+                            ),
                           ),
                         );
                       },
