@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
+
+import '../models/class_section.dart';
 import 'quiz_screen.dart';
 
 class ReadingScreen extends StatefulWidget {
-  const ReadingScreen({super.key});
+  final List<ClassSection> classes;
+
+  const ReadingScreen({
+    super.key,
+    required this.classes,
+  });
 
   @override
   State<ReadingScreen> createState() => _ReadingScreenState();
 }
 
 class _ReadingScreenState extends State<ReadingScreen> {
+  ClassSection? selectedClass;
   String? selectedStudent;
-
-  final students = [
-    'Juan Dela Cruz',
-    'Maria Santos',
-    'Pedro Reyes',
-  ];
 
   final materials = [
     {
@@ -43,6 +45,8 @@ class _ReadingScreenState extends State<ReadingScreen> {
   Widget build(BuildContext context) {
     final material = materials[selectedMaterial];
 
+    final students = selectedClass?.students ?? [];
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Reading Assessment'),
@@ -58,6 +62,41 @@ class _ReadingScreenState extends State<ReadingScreen> {
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
               ),
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text(
+              'Class Section',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            DropdownButtonFormField<ClassSection>(
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'Select a class section',
+              ),
+              initialValue: selectedClass,
+              items: widget.classes.map((classSection) {
+                return DropdownMenuItem<ClassSection>(
+                  value: classSection,
+                  child: Text(
+                    '${classSection.gradeLevel} - '
+                    '${classSection.sectionName}',
+                  ),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  selectedClass = value;
+                  selectedStudent = null;
+                });
+              },
             ),
 
             const SizedBox(height: 20),
@@ -79,16 +118,18 @@ class _ReadingScreenState extends State<ReadingScreen> {
               ),
               initialValue: selectedStudent,
               items: students.map((student) {
-                return DropdownMenuItem(
+                return DropdownMenuItem<String>(
                   value: student,
                   child: Text(student),
                 );
               }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedStudent = value;
-                });
-              },
+              onChanged: selectedClass == null || students.isEmpty
+                  ? null
+                  : (value) {
+                      setState(() {
+                        selectedStudent = value;
+                      });
+                    },
             ),
 
             const SizedBox(height: 20),
@@ -111,7 +152,7 @@ class _ReadingScreenState extends State<ReadingScreen> {
               items: List.generate(
                 materials.length,
                 (index) {
-                  return DropdownMenuItem(
+                  return DropdownMenuItem<int>(
                     value: index,
                     child: Text(materials[index]['title']!),
                   );

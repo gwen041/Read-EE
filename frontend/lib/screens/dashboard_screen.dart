@@ -167,7 +167,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const ReadingScreen(),
+                    builder: (context) => ReadingScreen(
+                      classes: widget.classes,
+                    ),
                   ),
                 );
               },
