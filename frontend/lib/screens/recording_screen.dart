@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:record/record.dart';
+import 'recording_review_screen.dart';
 
 class RecordingScreen extends StatefulWidget {
   final String studentName;
@@ -59,14 +60,18 @@ class _RecordingScreenState extends State<RecordingScreen> {
       isRecording = false;
     });
 
-    if (!mounted) return;
+    if (!mounted || path == null) {
+      return;
+    }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          path == null
-              ? 'Recording stopped.'
-              : 'Recording saved.',
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RecordingReviewScreen(
+          studentName: widget.studentName,
+          materialTitle: widget.materialTitle,
+          passage: widget.passage,
+          audioPath: path,
         ),
       ),
     );
