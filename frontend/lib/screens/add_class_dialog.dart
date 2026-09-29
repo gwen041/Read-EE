@@ -48,120 +48,122 @@ class _AddClassDialogState extends State<AddClassDialog> {
     if (sectionExists) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('That section already exists for this grade.'),
+          content: Text(
+            'That section already exists for this grade.',
+          ),
         ),
       );
       return;
     }
 
-    widget.classes.add(
-      ClassSection(
-        gradeLevel: selectedGrade,
-        sectionName: sectionName,
-      ),
+    final newClass = ClassSection(
+      gradeLevel: selectedGrade,
+      sectionName: sectionName,
     );
 
-    Navigator.pop(context, true);
+    Navigator.pop(context, newClass);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: SizedBox(
-        width: 500,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Add Class',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+    return Dialog(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: SizedBox(
+          width: 500,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Add Class',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                IconButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  icon: const Icon(Icons.close),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            const Text(
-              'Grade Level',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
+                  IconButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
               ),
-            ),
 
-            const SizedBox(height: 8),
+              const SizedBox(height: 20),
 
-            DropdownButtonFormField<String>(
-              initialValue: selectedGrade,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-              ),
-              items: const [
-                DropdownMenuItem(
-                  value: 'Grade 4',
-                  child: Text('Grade 4'),
+              const Text(
+                'Grade Level',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
                 ),
-                DropdownMenuItem(
-                  value: 'Grade 5',
-                  child: Text('Grade 5'),
+              ),
+
+              const SizedBox(height: 8),
+
+              DropdownButtonFormField<String>(
+                initialValue: selectedGrade,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
                 ),
-                DropdownMenuItem(
-                  value: 'Grade 6',
-                  child: Text('Grade 6'),
+                items: const [
+                  DropdownMenuItem(
+                    value: 'Grade 4',
+                    child: Text('Grade 4'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Grade 5',
+                    child: Text('Grade 5'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Grade 6',
+                    child: Text('Grade 6'),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value == null) return;
+
+                  setState(() {
+                    selectedGrade = value;
+                  });
+                },
+              ),
+
+              const SizedBox(height: 20),
+
+              const Text(
+                'Section Name',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
                 ),
-              ],
-              onChanged: (value) {
-                if (value == null) return;
-
-                setState(() {
-                  selectedGrade = value;
-                });
-              },
-            ),
-
-            const SizedBox(height: 20),
-
-            const Text(
-              'Section Name',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
               ),
-            ),
 
-            const SizedBox(height: 8),
+              const SizedBox(height: 8),
 
-            TextField(
-              controller: sectionController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'e.g. Narra',
+              TextField(
+                controller: sectionController,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'e.g. Narra',
+                ),
               ),
-            ),
 
-            const SizedBox(height: 25),
+              const SizedBox(height: 25),
 
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: addClass,
-                child: const Text('ADD CLASS'),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: addClass,
+                  child: const Text('ADD CLASS'),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

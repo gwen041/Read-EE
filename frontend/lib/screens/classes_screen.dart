@@ -18,19 +18,19 @@ class ClassesScreen extends StatefulWidget {
 
 class _ClassesScreenState extends State<ClassesScreen> {
   Future<void> addClass() async {
-    final added = await showDialog<bool>(
+    final newClass = await showDialog<ClassSection>(
       context: context,
       builder: (context) {
-        return Dialog(
-          child: AddClassDialog(
-            classes: widget.classes,
-          ),
+        return AddClassDialog(
+          classes: widget.classes,
         );
       },
     );
 
-    if (added == true) {
-      setState(() {});
+    if (newClass != null && mounted) {
+      setState(() {
+        widget.classes.add(newClass);
+      });
     }
   }
 

@@ -9,10 +9,10 @@ import 'classes_screen.dart';
 class DashboardScreen extends StatefulWidget {
   final List<ClassSection> classes;
 
-  const DashboardScreen({
+  DashboardScreen({
     super.key,
-    this.classes = const [],
-  });
+    List<ClassSection>? classes,
+  }) : classes = classes ?? [];
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
