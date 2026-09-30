@@ -1,6 +1,7 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
-class RecordingReviewScreen extends StatelessWidget {
+class RecordingReviewScreen extends StatefulWidget {
   final String studentName;
   final String materialTitle;
   final String passage;
@@ -15,6 +16,41 @@ class RecordingReviewScreen extends StatelessWidget {
   });
 
   @override
+  State<RecordingReviewScreen> createState() =>
+      _RecordingReviewScreenState();
+}
+
+class _RecordingReviewScreenState
+    extends State<RecordingReviewScreen> {
+  final AudioPlayer audioPlayer = AudioPlayer();
+
+  bool isPlaying = false;
+
+  @override
+  void dispose() {
+    audioPlayer.dispose();
+    super.dispose();
+  }
+
+  Future<void> playRecording() async {
+    await audioPlayer.play(
+      UrlSource(widget.audioPath),
+    );
+
+    setState(() {
+      isPlaying = true;
+    });
+  }
+
+  Future<void> stopRecordingPlayback() async {
+    await audioPlayer.stop();
+
+    setState(() {
+      isPlaying = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -26,7 +62,7 @@ class RecordingReviewScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              studentName,
+              widget.studentName,
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -36,8 +72,10 @@ class RecordingReviewScreen extends StatelessWidget {
             const SizedBox(height: 8),
 
             Text(
-              materialTitle,
-              style: const TextStyle(fontSize: 18),
+              widget.materialTitle,
+              style: const TextStyle(
+                fontSize: 18,
+              ),
             ),
 
             const SizedBox(height: 25),
@@ -53,22 +91,63 @@ class RecordingReviewScreen extends StatelessWidget {
             const SizedBox(height: 10),
 
             const Text(
-              'The student recording has been captured successfully.',
+              'Listen to the recording before continuing.',
               style: TextStyle(fontSize: 16),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 25),
 
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 border: Border.all(),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Text(
-                'Audio file:\n$audioPath',
-                style: const TextStyle(fontSize: 14),
+              child: Column(
+                children: [
+                  const Icon(
+                    Icons.audiotrack,
+                    size: 50,
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  Text(
+                    isPlaying
+                        ? 'Playing recording...'
+                        : 'Recording ready',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: isPlaying
+                            ? null
+                            : playRecording,
+                        icon: const Icon(Icons.play_arrow),
+                        label: const Text('PLAY'),
+                      ),
+
+                      const SizedBox(width: 10),
+
+                      OutlinedButton.icon(
+                        onPressed: isPlaying
+                            ? stopRecordingPlayback
+                            : null,
+                        icon: const Icon(Icons.stop),
+                        label: const Text('STOP'),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
 
