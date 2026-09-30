@@ -26,6 +26,39 @@ class _RecordingReviewScreenState
 
   bool isPlaying = false;
 
+  Duration duration = Duration.zero;
+  Duration position = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+
+    audioPlayer.onDurationChanged.listen((newDuration) {
+      if (mounted) {
+        setState(() {
+          duration = newDuration;
+        });
+      }
+    });
+
+    audioPlayer.onPositionChanged.listen((newPosition) {
+      if (mounted) {
+        setState(() {
+          position = newPosition;
+        });
+      }
+    });
+
+    audioPlayer.onPlayerComplete.listen((_) {
+      if (mounted) {
+        setState(() {
+          isPlaying = false;
+          position = Duration.zero;
+        });
+      }
+    });
+  }
+
   @override
   void dispose() {
     audioPlayer.dispose();
@@ -37,17 +70,36 @@ class _RecordingReviewScreenState
       UrlSource(widget.audioPath),
     );
 
-    setState(() {
-      isPlaying = true;
-    });
+    if (mounted) {
+      setState(() {
+        isPlaying = true;
+      });
+    }
   }
 
   Future<void> stopRecordingPlayback() async {
     await audioPlayer.stop();
 
-    setState(() {
-      isPlaying = false;
-    });
+    if (mounted) {
+      setState(() {
+        isPlaying = false;
+        position = Duration.zero;
+      });
+    }
+  }
+
+  String formatDuration(Duration duration) {
+    final minutes = duration.inMinutes
+        .remainder(60)
+        .toString()
+        .padLeft(2, '0');
+
+    final seconds = duration.inSeconds
+        .remainder(60)
+        .toString()
+        .padLeft(2, '0');
+
+    return '$minutes:$seconds';
   }
 
   @override
@@ -68,18 +120,14 @@ class _RecordingReviewScreenState
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 8),
-
             Text(
               widget.materialTitle,
               style: const TextStyle(
                 fontSize: 18,
               ),
             ),
-
             const SizedBox(height: 25),
-
             const Text(
               'Recording Complete',
               style: TextStyle(
@@ -87,19 +135,16 @@ class _RecordingReviewScreenState
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 10),
-
             const Text(
               'Listen to the recording before continuing.',
               style: TextStyle(fontSize: 16),
             ),
-
             const SizedBox(height: 25),
 
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20.0),
               decoration: BoxDecoration(
                 border: Border.all(),
                 borderRadius: BorderRadius.circular(8),
@@ -110,7 +155,6 @@ class _RecordingReviewScreenState
                     Icons.audiotrack,
                     size: 50,
                   ),
-
                   const SizedBox(height: 15),
 
                   Text(
@@ -123,21 +167,58 @@ class _RecordingReviewScreenState
                     ),
                   ),
 
+                  const SizedBox(height: 20),
+
+                  Slider(
+                    min: 0,
+                    max: duration.inMilliseconds > 0
+                        ? duration.inMilliseconds.toDouble()
+                        : 1,
+                    value: position.inMilliseconds
+                        .clamp(
+                          0,
+                          duration.inMilliseconds,
+                        )
+                        .toDouble(),
+                    onChanged: duration == Duration.zero
+                        ? null
+                        : (value) async {
+                            final newPosition =
+                                Duration(
+                              milliseconds: value.toInt(),
+                            );
+
+                            await audioPlayer.seek(
+                              newPosition,
+                            );
+                          },
+                  ),
+
+                  Row(
+                    mainAxisAlignment:
+                        MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(formatDuration(position)),
+                      Text(formatDuration(duration)),
+                    ],
+                  ),
+
                   const SizedBox(height: 15),
 
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment:
+                        MainAxisAlignment.center,
                     children: [
                       ElevatedButton.icon(
                         onPressed: isPlaying
                             ? null
                             : playRecording,
-                        icon: const Icon(Icons.play_arrow),
+                        icon: const Icon(
+                          Icons.play_arrow,
+                        ),
                         label: const Text('PLAY'),
                       ),
-
                       const SizedBox(width: 10),
-
                       OutlinedButton.icon(
                         onPressed: isPlaying
                             ? stopRecordingPlayback
