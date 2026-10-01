@@ -1,5 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'quiz_screen.dart';
 
 class RecordingReviewScreen extends StatefulWidget {
   final String studentName;
@@ -238,7 +239,16 @@ class _RecordingReviewScreenState
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // Quiz will be connected here later.
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => QuizScreen(
+                        studentName: widget.studentName,
+                        materialTitle: widget.materialTitle,
+                        passage: widget.passage,
+                      ),
+                    ),
+                  );
                 },
                 child: const Text('CONTINUE TO QUIZ'),
               ),

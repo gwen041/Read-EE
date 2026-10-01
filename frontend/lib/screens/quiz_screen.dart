@@ -3,7 +3,16 @@ import 'results_screen.dart';
 
 
 class QuizScreen extends StatefulWidget {
-  const QuizScreen({super.key});
+  final String studentName;
+  final String materialTitle;
+  final String passage;
+
+  const QuizScreen({
+    super.key,
+    required this.studentName,
+    required this.materialTitle,
+    required this.passage,
+  });
 
   @override
   State<QuizScreen> createState() => _QuizScreenState();
@@ -15,19 +24,47 @@ class _QuizScreenState extends State<QuizScreen> {
   final questions = [
     {
       'question': 'Where did the boy go?',
-      'choices': ['The park', 'The school', 'The market', 'The library'],
+      'choices': [
+        'The park',
+        'The school',
+        'The market',
+        'The library',
+      ],
     },
     {
       'question': 'What did the boy carry?',
-      'choices': ['A red bag', 'A lunch box', 'A blue bag', 'A book'],
+      'choices': [
+        'A red bag',
+        'A lunch box',
+        'A blue bag',
+        'A book',
+      ],
     },
     {
-      'question': 'Why did the boy go to school early?',
+      'question': 'When did the boy go to school?',
       'choices': [
-        'To meet his teacher',
-        'To play with friends',
-        'To go home',
-        'To buy food',
+        'In the afternoon',
+        'At noon',
+        'Late at night',
+        'Early in the morning',
+      ],
+    },
+    {
+      'question': 'Who did the boy greet?',
+      'choices': [
+        'His friend',
+        'His teacher',
+        'His brother',
+        'His neighbor',
+      ],
+    },
+    {
+      'question': 'What can we infer about the boy?',
+      'choices': [
+        'He was prepared for school.',
+        'He did not like school.',
+        'He forgot his books.',
+        'He was looking for his dog.',
       ],
     },
   ];
