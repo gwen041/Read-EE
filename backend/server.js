@@ -1,7 +1,13 @@
 const express = require('express');
 const { spawn } = require('child_process');
+const multer = require('multer');
+const path = require('path');
 
 const app = express();
+
+const upload = multer({
+  dest: 'uploads/'
+});
 
 app.use(express.json());
 
@@ -17,7 +23,13 @@ app.get('/api/test', (req, res) => {
   );
 });
 
-app.post('/api/assessment', (req, res) => {
+app.post('/api/assessment', upload.single('audioFile'), (req, res) => {
+
+  if (!req.file) {
+    return res.status(400).json({
+      message: 'Audio file is required.'
+    });
+  }
 
   const python = spawn(
     'C:\\github_projects\\read-ee\\speech-recognition\\.venv\\Scripts\\python.exe',
@@ -27,7 +39,13 @@ app.post('/api/assessment', (req, res) => {
     }
   );
 
-  python.stdin.write(JSON.stringify(req.body));
+  const assessmentData = {
+    audioFile: path.resolve(req.file.path),
+    expectedText: req.body.expectedText,
+    studentAnswers: JSON.parse(req.body.studentAnswers)
+  };
+
+  python.stdin.write(JSON.stringify(assessmentData));
   python.stdin.end();
 
   let output = '';
