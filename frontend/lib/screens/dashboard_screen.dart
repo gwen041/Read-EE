@@ -12,7 +12,19 @@ class DashboardScreen extends StatefulWidget {
   DashboardScreen({
     super.key,
     List<ClassSection>? classes,
-  }) : classes = classes ?? [];
+  }) : classes = classes ?? [
+          ClassSection(
+            gradeLevel: 'Grade 4',
+            sectionName: 'Narra',
+            students: [
+              'Juan Dela Cruz',
+              'Maria Santos',
+              'Miguel Reyes',
+              'Ana Garcia',
+              'Sofia Mendoza',
+            ],
+          ),
+        ];
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
