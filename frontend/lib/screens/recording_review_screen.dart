@@ -246,6 +246,7 @@ class _RecordingReviewScreenState
                         studentName: widget.studentName,
                         materialTitle: widget.materialTitle,
                         passage: widget.passage,
+                        audioPath: widget.audioPath,
                       ),
                     ),
                   );

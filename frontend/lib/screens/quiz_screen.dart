@@ -6,12 +6,14 @@ class QuizScreen extends StatefulWidget {
   final String studentName;
   final String materialTitle;
   final String passage;
+  final String audioPath;
 
   const QuizScreen({
     super.key,
     required this.studentName,
     required this.materialTitle,
     required this.passage,
+    required this.audioPath,
   });
 
   @override
@@ -146,7 +148,13 @@ class _QuizScreenState extends State<QuizScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const ResultsScreen(),
+                      builder: (context) => ResultsScreen(
+                        studentName: widget.studentName,
+                        materialTitle: widget.materialTitle,
+                        passage: widget.passage,
+                        audioPath: widget.audioPath,
+                        answers: answers,
+                      ),
                     ),
                   );
                 },
