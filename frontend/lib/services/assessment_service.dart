@@ -31,14 +31,60 @@ class AssessmentService {
 
     final response = await request.send();
 
-    final responseBody = await response.stream.bytesToString();
+    final responseBody =
+        await response.stream.bytesToString();
 
     if (response.statusCode != 200) {
       throw Exception(
-        'Assessment failed: ${response.statusCode} $responseBody',
+        'Assessment failed: '
+        '${response.statusCode} $responseBody',
       );
     }
 
-    return jsonDecode(responseBody) as Map<String, dynamic>;
+    return jsonDecode(responseBody)
+        as Map<String, dynamic>;
+  }
+
+
+  // Finalize assessment after teacher verification.
+  static Future<Map<String, dynamic>> finalizeAssessment({
+    required Map<String, dynamic> accuracy,
+    required Map<String, dynamic> wpm,
+    required Map<String, dynamic> comprehension,
+    required Map<int, bool> decisions,
+  }) async {
+
+    // Convert integer keys to strings because
+    // the backend/Python uses "0", "1", "2", etc.
+    final formattedDecisions = <String, bool>{};
+
+    decisions.forEach((key, value) {
+      formattedDecisions[key.toString()] = value;
+    });
+
+    final response = await http.post(
+      Uri.parse(
+        '$baseUrl/api/assessment/finalize',
+      ),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'accuracy': accuracy,
+        'wpm': wpm,
+        'comprehension': comprehension,
+        'decisions': formattedDecisions,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        'Assessment finalization failed: '
+        '${response.statusCode} ${response.body}',
+      );
+    }
+
+    return jsonDecode(response.body)
+        as Map<String, dynamic>;
   }
 }

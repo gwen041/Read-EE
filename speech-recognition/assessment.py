@@ -1,9 +1,9 @@
 from transcribe import transcribe_audio
-from accuracy import calculate_accuracy
 from wpm import calculate_wpm
 from comprehension import calculate_comprehension
 from quiz_data import questions
 from ml.predict import predict_classification
+from accuracy import (calculate_accuracy, apply_teacher_corrections)
 
 
 def run_assessment(audio_file, expected_text, student_answers):
@@ -12,7 +12,8 @@ def run_assessment(audio_file, expected_text, student_answers):
 
   accuracy_result = calculate_accuracy(
     expected_text,
-    student_text
+    student_text,
+    word_timestamps
   )
 
   wpm_result = calculate_wpm(word_timestamps)
@@ -30,6 +31,31 @@ def run_assessment(audio_file, expected_text, student_answers):
 
   return {
     "accuracy": accuracy_result,
+    "wpm": wpm_result,
+    "comprehension": comprehension_result,
+    "classification": prediction
+  }
+
+def finalize_assessment(
+  accuracy_result,
+  wpm_result,
+  comprehension_result,
+  decisions
+):
+
+  corrected_accuracy = apply_teacher_corrections(
+    accuracy_result,
+    decisions
+  )
+
+  prediction = predict_classification(
+    corrected_accuracy["accuracy"],
+    wpm_result["wpm"],
+    comprehension_result["score"]
+  )
+
+  return {
+    "accuracy": corrected_accuracy,
     "wpm": wpm_result,
     "comprehension": comprehension_result,
     "classification": prediction
@@ -73,3 +99,23 @@ if __name__ == "__main__":
 
   print("\nML Classification:")
   print(result["classification"])
+
+  test_decisions = {
+    "0": True,
+    "1": False
+  }
+
+  final_result = finalize_assessment(
+    result["accuracy"],
+    result["wpm"],
+    result["comprehension"],
+    test_decisions
+  )
+
+  print("\n======FINAL RESULT=======")
+
+  print("\nFinal Accuracy:")
+  print(final_result["accuracy"])
+
+  print("\nFinal Classification:")
+  print(final_result["classification"])

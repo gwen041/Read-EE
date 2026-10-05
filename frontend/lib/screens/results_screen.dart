@@ -196,14 +196,54 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
     if (!mounted) return;
 
-    if (decisions != null) {
+    if (decisions == null) {
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    try {
+      final finalResult =
+          await AssessmentService.finalizeAssessment(
+        accuracy: Map<String, dynamic>.from(
+          result!['accuracy'],
+        ),
+        wpm: Map<String, dynamic>.from(
+          result!['wpm'],
+        ),
+        comprehension: Map<String, dynamic>.from(
+          result!['comprehension'],
+        ),
+        decisions: Map<int, bool>.from(
+          decisions,
+        ),
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        result = finalResult;
+        isLoading = false;
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Reading verification completed.',
+            'Reading verification completed. '
+            'Final results updated.',
           ),
         ),
       );
+    } catch (error) {
+      if (!mounted) return;
+
+      setState(() {
+        errorMessage = error.toString();
+        isLoading = false;
+      });
     }
   }
 
