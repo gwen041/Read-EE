@@ -25,9 +25,14 @@ class ResultsScreen extends StatefulWidget {
 
 class _ResultsScreenState extends State<ResultsScreen> {
   bool isLoading = true;
+  bool isFinalized = false;
+
   String? errorMessage;
 
   Map<String, dynamic>? result;
+
+  // Keeps the original automated assessment.
+  Map<String, dynamic>? initialResult;
 
   @override
   void initState() {
@@ -49,6 +54,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
       setState(() {
         result = response;
+        initialResult = response;
         isLoading = false;
       });
     } catch (error) {
@@ -226,6 +232,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
       setState(() {
         result = finalResult;
+        isFinalized = true;
         isLoading = false;
       });
 
@@ -255,12 +262,215 @@ class _ResultsScreenState extends State<ResultsScreen> {
     return item.toString();
   }
 
+  Widget buildResultCard({
+    required String title,
+    required String value,
+  }) {
+    return Card(
+      child: ListTile(
+        title: Text(title),
+        trailing: Text(
+          value,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildInitialAssessmentCard() {
+    if (initialResult == null) {
+      return const SizedBox.shrink();
+    }
+
+    final initialAccuracy =
+        initialResult!['accuracy'];
+
+    final initialWpm =
+        initialResult!['wpm'];
+
+    final initialComprehension =
+        initialResult!['comprehension'];
+
+    final initialClassification =
+        initialResult!['classification'];
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Initial Automated Assessment',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            const Text(
+              'Results generated from the initial '
+              'speech recognition and assessment.',
+            ),
+
+            const SizedBox(height: 15),
+
+            buildResultCard(
+              title: 'Reading Accuracy',
+              value:
+                  '${initialAccuracy['accuracy']}%',
+            ),
+
+            buildResultCard(
+              title: 'Words Per Minute',
+              value:
+                  '${initialWpm['wpm'].toStringAsFixed(2)}',
+            ),
+
+            buildResultCard(
+              title: 'Comprehension Score',
+              value:
+                  '${initialComprehension['score']}%',
+            ),
+
+            const SizedBox(height: 8),
+
+            const Text(
+              'Classification',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Text(
+                    initialClassification
+                        .toString()
+                        .toUpperCase(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildFinalAssessmentCard(
+    Map<String, dynamic> accuracy,
+    Map<String, dynamic> wpm,
+    Map<String, dynamic> comprehension,
+    dynamic classification,
+  ) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
+          children: [
+            Text(
+              isFinalized
+                  ? 'Teacher-Verified Final Assessment'
+                  : 'Assessment Results',
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            if (isFinalized) ...[
+              const SizedBox(height: 8),
+
+              const Text(
+                'Final results after teacher verification '
+                'of the reading errors.',
+              ),
+            ],
+
+            const SizedBox(height: 15),
+
+            buildResultCard(
+              title: 'Reading Accuracy',
+              value:
+                  '${accuracy['accuracy']}%',
+            ),
+
+            buildResultCard(
+              title: 'Words Per Minute',
+              value:
+                  '${wpm['wpm'].toStringAsFixed(2)}',
+            ),
+
+            buildResultCard(
+              title: 'Comprehension Score',
+              value:
+                  '${comprehension['score']}%',
+            ),
+
+            const SizedBox(height: 8),
+
+            const Text(
+              'Classification',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Text(
+                    classification
+                        .toString()
+                        .toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Assessment Results'),
+          title: const Text(
+            'Assessment Results',
+          ),
         ),
         body: const Center(
           child: CircularProgressIndicator(),
@@ -271,7 +481,9 @@ class _ResultsScreenState extends State<ResultsScreen> {
     if (errorMessage != null) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Assessment Results'),
+          title: const Text(
+            'Assessment Results',
+          ),
         ),
         body: Center(
           child: Padding(
@@ -303,12 +515,15 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Assessment Results'),
+        title: const Text(
+          'Assessment Results',
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
           children: [
             Text(
               widget.studentName,
@@ -339,7 +554,52 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
             const SizedBox(height: 20),
 
-            if (hasErrors) ...[
+            // ------------------------------------------------
+            // READING VERIFICATION STATUS
+            // ------------------------------------------------
+
+            if (isFinalized) ...[
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Reading Verification Completed',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      const Text(
+                        'The teacher reviewed the detected '
+                        'reading differences. The final '
+                        'assessment below reflects the '
+                        'teacher verification.',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 15),
+
+              // Show the original automated result.
+              buildInitialAssessmentCard(),
+
+              const SizedBox(height: 15),
+            ],
+
+            // ------------------------------------------------
+            // INITIAL READING VERIFICATION
+            // ------------------------------------------------
+
+            if (!isFinalized && hasErrors) ...[
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -465,81 +725,18 @@ class _ResultsScreenState extends State<ResultsScreen> {
               const SizedBox(height: 15),
             ],
 
-            Card(
-              child: ListTile(
-                title: const Text(
-                  'Reading Accuracy',
-                ),
-                trailing: Text(
-                  '${accuracy['accuracy']}%',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
+            // ------------------------------------------------
+            // FINAL / CURRENT RESULTS
+            // ------------------------------------------------
 
-            Card(
-              child: ListTile(
-                title: const Text(
-                  'Words Per Minute',
-                ),
-                trailing: Text(
-                  '${wpm['wpm'].toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-
-            Card(
-              child: ListTile(
-                title: const Text(
-                  'Comprehension Score',
-                ),
-                trailing: Text(
-                  '${comprehension['score']}%',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+            buildFinalAssessmentCard(
+              accuracy,
+              wpm,
+              comprehension,
+              classification,
             ),
 
             const SizedBox(height: 20),
-
-            const Text(
-              'Classification',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: Text(
-                    classification
-                        .toString()
-                        .toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ),
 
             SizedBox(
               width: double.infinity,
