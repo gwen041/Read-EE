@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'results_screen.dart';
 
-
 class QuizScreen extends StatefulWidget {
   final String studentName;
   final String materialTitle;
@@ -27,46 +26,47 @@ class _QuizScreenState extends State<QuizScreen> {
     {
       'question': 'Where did the boy go?',
       'choices': [
-        'The park',
-        'The school',
-        'The market',
-        'The library',
+        'He went to the park.',
+        'He went to the school.',
+        'He went to the store.',
+        'He went to the library.',
       ],
     },
     {
-      'question': 'What did the boy carry?',
+      'question': 'Why do you think the boy went to school early?',
       'choices': [
-        'A red bag',
-        'A lunch box',
-        'A blue bag',
-        'A book',
+        'He wanted to play outside.',
+        'He wanted to arrive at school before his class started.',
+        'He wanted to buy some food.',
+        'He wanted to go back home.',
       ],
     },
     {
-      'question': 'When did the boy go to school?',
-      'choices': [
-        'In the afternoon',
-        'At noon',
-        'Late at night',
-        'Early in the morning',
-      ],
-    },
-    {
-      'question': 'Who did the boy greet?',
-      'choices': [
-        'His friend',
-        'His teacher',
-        'His brother',
-        'His neighbor',
-      ],
-    },
-    {
-      'question': 'What can we infer about the boy?',
+      'question': 'What can you tell about the boy from the story?',
       'choices': [
         'He was prepared for school.',
-        'He did not like school.',
-        'He forgot his books.',
-        'He was looking for his dog.',
+        'He did not like his teacher.',
+        'He forgot his school books.',
+        'He was going to the park.',
+      ],
+    },
+    {
+      'question':
+          'What would most likely happen after the boy greeted his teacher?',
+      'choices': [
+        'He would enter his classroom.',
+        'He would go back home.',
+        'He would go to the store.',
+        'He would take a nap.',
+      ],
+    },
+    {
+      'question': 'Which title would be best for the story?',
+      'choices': [
+        'A Morning at the Park',
+        "The Boy's School Morning",
+        'The Lost School Bag',
+        'A Trip to the Store',
       ],
     },
   ];
@@ -123,13 +123,14 @@ class _QuizScreenState extends State<QuizScreen> {
                             },
                             child: Column(
                               children: [
-                                ...List<String>.from(question['choices'] as List)
-                                    .map(
-                                      (choice) => RadioListTile<String>(
-                                        title: Text(choice),
-                                        value: choice,
-                                      ),
-                                    ),
+                                ...List<String>.from(
+                                  question['choices'] as List,
+                                ).map(
+                                  (choice) => RadioListTile<String>(
+                                    title: Text(choice),
+                                    value: choice,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -145,6 +146,17 @@ class _QuizScreenState extends State<QuizScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
+                  if (answers.length != questions.length) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Please answer all questions before submitting.',
+                        ),
+                      ),
+                    );
+                    return;
+                  }
+
                   Navigator.push(
                     context,
                     MaterialPageRoute(

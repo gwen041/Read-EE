@@ -68,87 +68,72 @@ class _ResultsScreenState extends State<ResultsScreen> {
   }
 
   List<String> convertAnswersToLetters() {
-    const correctAnswerLetters = [
-      'B',
-      'C',
-      'D',
-      'B',
-      'A',
-    ];
-
     final answers = <String>[];
 
-    for (int i = 0; i < correctAnswerLetters.length; i++) {
-      if (widget.answers[i] == null) {
-        answers.add('');
-      } else {
-        final choice = widget.answers[i]!;
+    for (int i = 0; i < 5; i++) {
+      final selectedAnswer = widget.answers[i];
 
-        if (i == 0) {
-          answers.add(
-            _getLetter(
-              choice,
-              [
-                'The park',
-                'The school',
-                'The market',
-                'The library',
-              ],
-            ),
-          );
-        } else if (i == 1) {
-          answers.add(
-            _getLetter(
-              choice,
-              [
-                'A red bag',
-                'A lunch box',
-                'A blue bag',
-                'A book',
-              ],
-            ),
-          );
-        } else if (i == 2) {
-          answers.add(
-            _getLetter(
-              choice,
-              [
-                'In the afternoon',
-                'At noon',
-                'Late at night',
-                'Early in the morning',
-              ],
-            ),
-          );
-        } else if (i == 3) {
-          answers.add(
-            _getLetter(
-              choice,
-              [
-                'His friend',
-                'His teacher',
-                'His brother',
-                'His neighbor',
-              ],
-            ),
-          );
-        } else if (i == 4) {
-          answers.add(
-            _getLetter(
-              choice,
-              [
-                'He was prepared for school.',
-                'He did not like school.',
-                'He forgot his books.',
-                'He was looking for his dog.',
-              ],
-            ),
-          );
-        }
+      if (selectedAnswer == null) {
+        answers.add('');
+        continue;
       }
+
+      final letter = _getLetter(
+        selectedAnswer,
+        _getChoicesForQuestion(i),
+      );
+
+      answers.add(letter);
     }
 
     return answers;
+  }
+
+  List<String> _getChoicesForQuestion(int index) {
+    switch (index) {
+      case 0:
+        return [
+          'He went to the park.',
+          'He went to the school.',
+          'He went to the store.',
+          'He went to the library.',
+        ];
+
+      case 1:
+        return [
+          'He wanted to play outside.',
+          'He wanted to arrive at school before his class started.',
+          'He wanted to buy some food.',
+          'He wanted to go back home.',
+        ];
+
+      case 2:
+        return [
+          'He was prepared for school.',
+          'He did not like his teacher.',
+          'He forgot his school books.',
+          'He was going to the park.',
+        ];
+
+      case 3:
+        return [
+          'He would enter his classroom.',
+          'He would go back home.',
+          'He would go to the store.',
+          'He would take a nap.',
+        ];
+
+      case 4:
+        return [
+          'A Morning at the Park',
+          "The Boy's School Morning",
+          'The Lost School Bag',
+          'A Trip to the Store',
+        ];
+
+      default:
+        return [];
+    }
   }
 
   String _getLetter(
