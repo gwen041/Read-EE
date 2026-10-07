@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../models/assessment.dart';
-import '../services/assessment_store.dart';
 import '../services/assessment_service.dart';
+import '../services/assessment_store.dart';
 import 'reading_verification_screen.dart';
 
 class ResultsScreen extends StatefulWidget {
@@ -22,7 +22,8 @@ class ResultsScreen extends StatefulWidget {
   });
 
   @override
-  State<ResultsScreen> createState() => _ResultsScreenState();
+  State<ResultsScreen> createState() =>
+      _ResultsScreenState();
 }
 
 class _ResultsScreenState extends State<ResultsScreen> {
@@ -46,7 +47,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
     try {
       final studentAnswers = convertAnswersToLetters();
 
-      final response = await AssessmentService.submitAssessment(
+      final response =
+          await AssessmentService.submitAssessment(
         audioPath: widget.audioPath,
         passage: widget.passage,
         studentAnswers: studentAnswers,
@@ -178,7 +180,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
     final decisions = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ReadingVerificationScreen(
+        builder: (context) =>
+            ReadingVerificationScreen(
           studentName: widget.studentName,
           materialTitle: widget.materialTitle,
           audioPath: widget.audioPath,
@@ -207,7 +210,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
         wpm: Map<String, dynamic>.from(
           result!['wpm'],
         ),
-        comprehension: Map<String, dynamic>.from(
+        comprehension:
+            Map<String, dynamic>.from(
           result!['comprehension'],
         ),
         decisions: Map<int, bool>.from(
@@ -247,6 +251,61 @@ class _ResultsScreenState extends State<ResultsScreen> {
     }
 
     return item.toString();
+  }
+
+  void saveAssessment() {
+    if (result == null) {
+      return;
+    }
+
+    final accuracy =
+        Map<String, dynamic>.from(
+      result!['accuracy'],
+    );
+
+    final wpm =
+        Map<String, dynamic>.from(
+      result!['wpm'],
+    );
+
+    final comprehension =
+        Map<String, dynamic>.from(
+      result!['comprehension'],
+    );
+
+    final classification =
+        result!['classification'].toString();
+
+    final initialAccuracy =
+        initialResult?['accuracy'];
+
+    final initialAccuracyValue =
+        initialAccuracy != null
+            ? (initialAccuracy['accuracy'] as num)
+                .toDouble()
+            : (accuracy['accuracy'] as num)
+                .toDouble();
+
+    AssessmentStore.addAssessment(
+      Assessment(
+        studentName: widget.studentName,
+        materialTitle: widget.materialTitle,
+        passage: widget.passage,
+        date: DateTime.now(),
+        initialAccuracy: initialAccuracyValue,
+        accuracy:
+            (accuracy['accuracy'] as num)
+                .toDouble(),
+        wpm:
+            (wpm['wpm'] as num)
+                .toDouble(),
+        comprehension:
+            (comprehension['score'] as num)
+                .toDouble(),
+        classification: classification,
+        isVerified: isFinalized,
+      ),
+    );
   }
 
   Widget buildResultCard({
@@ -340,7 +399,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding:
+                    const EdgeInsets.all(16.0),
                 child: SizedBox(
                   width: double.infinity,
                   child: Text(
@@ -350,7 +410,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                      fontWeight:
+                          FontWeight.bold,
                     ),
                   ),
                 ),
@@ -428,7 +489,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(20.0),
+                padding:
+                    const EdgeInsets.all(20.0),
                 child: SizedBox(
                   width: double.infinity,
                   child: Text(
@@ -446,45 +508,6 @@ class _ResultsScreenState extends State<ResultsScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void saveAssessment() {
-    if (result == null) {
-      return;
-    }
-
-    final accuracy =
-        Map<String, dynamic>.from(
-      result!['accuracy'],
-    );
-
-    final wpm =
-        Map<String, dynamic>.from(
-      result!['wpm'],
-    );
-
-    final comprehension =
-        Map<String, dynamic>.from(
-      result!['comprehension'],
-    );
-
-    final classification =
-        result!['classification'].toString();
-
-    AssessmentStore.addAssessment(
-      Assessment(
-        studentName: widget.studentName,
-        materialTitle: widget.materialTitle,
-        date: DateTime.now(),
-        accuracy:
-            (accuracy['accuracy'] as num).toDouble(),
-        wpm:
-            (wpm['wpm'] as num).toDouble(),
-        comprehension:
-            (comprehension['score'] as num).toDouble(),
-        classification: classification,
       ),
     );
   }
@@ -513,7 +536,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
         ),
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding:
+                const EdgeInsets.all(24.0),
             child: Text(
               errorMessage!,
               textAlign: TextAlign.center,
@@ -525,19 +549,24 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
     final accuracy = result!['accuracy'];
     final wpm = result!['wpm'];
-    final comprehension = result!['comprehension'];
-    final classification = result!['classification'];
+    final comprehension =
+        result!['comprehension'];
+    final classification =
+        result!['classification'];
 
     final hasErrors = hasReadingErrors();
 
     final mismatches =
-        (accuracy['mismatch_words'] as List?) ?? [];
+        (accuracy['mismatch_words'] as List?) ??
+            [];
 
     final missing =
-        (accuracy['missing_words'] as List?) ?? [];
+        (accuracy['missing_words'] as List?) ??
+            [];
 
     final extra =
-        (accuracy['extra_words'] as List?) ?? [];
+        (accuracy['extra_words'] as List?) ??
+            [];
 
     return Scaffold(
       appBar: AppBar(
@@ -546,7 +575,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding:
+            const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment:
               CrossAxisAlignment.start,
@@ -580,14 +610,11 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
             const SizedBox(height: 20),
 
-            // ------------------------------------------------
-            // READING VERIFICATION STATUS
-            // ------------------------------------------------
-
             if (isFinalized) ...[
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding:
+                      const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment:
                         CrossAxisAlignment.start,
@@ -596,7 +623,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
                         'Reading Verification Completed',
                         style: TextStyle(
                           fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontWeight:
+                              FontWeight.bold,
                         ),
                       ),
 
@@ -615,20 +643,16 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
               const SizedBox(height: 15),
 
-              // Show the original automated result.
               buildInitialAssessmentCard(),
 
               const SizedBox(height: 15),
             ],
 
-            // ------------------------------------------------
-            // INITIAL READING VERIFICATION
-            // ------------------------------------------------
-
             if (!isFinalized && hasErrors) ...[
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding:
+                      const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment:
                         CrossAxisAlignment.start,
@@ -637,7 +661,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
                         'Reading Verification Needed',
                         style: TextStyle(
                           fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontWeight:
+                              FontWeight.bold,
                         ),
                       ),
 
@@ -680,7 +705,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
                         const Text(
                           'Missing words:',
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
+                            fontWeight:
+                                FontWeight.bold,
                           ),
                         ),
 
@@ -694,7 +720,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
                                 bottom: 3,
                               ),
                               child: Text(
-                                '• ${getWordFromError(item)}',
+                                '• '
+                                '${getWordFromError(item)}',
                               ),
                             );
                           },
@@ -707,7 +734,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
                         const Text(
                           'Extra words:',
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
+                            fontWeight:
+                                FontWeight.bold,
                           ),
                         ),
 
@@ -721,7 +749,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
                                 bottom: 3,
                               ),
                               child: Text(
-                                '• ${getWordFromError(item)}',
+                                '• '
+                                '${getWordFromError(item)}',
                               ),
                             );
                           },
@@ -751,10 +780,6 @@ class _ResultsScreenState extends State<ResultsScreen> {
               const SizedBox(height: 15),
             ],
 
-            // ------------------------------------------------
-            // FINAL / CURRENT RESULTS
-            // ------------------------------------------------
-
             buildFinalAssessmentCard(
               accuracy,
               wpm,
@@ -769,6 +794,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
               child: ElevatedButton(
                 onPressed: () {
                   saveAssessment();
+
                   Navigator.popUntil(
                     context,
                     (route) => route.isFirst,
