@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../models/assessment.dart';
+import '../services/assessment_store.dart';
 import '../services/assessment_service.dart';
 import 'reading_verification_screen.dart';
 
@@ -448,6 +450,45 @@ class _ResultsScreenState extends State<ResultsScreen> {
     );
   }
 
+  void saveAssessment() {
+    if (result == null) {
+      return;
+    }
+
+    final accuracy =
+        Map<String, dynamic>.from(
+      result!['accuracy'],
+    );
+
+    final wpm =
+        Map<String, dynamic>.from(
+      result!['wpm'],
+    );
+
+    final comprehension =
+        Map<String, dynamic>.from(
+      result!['comprehension'],
+    );
+
+    final classification =
+        result!['classification'].toString();
+
+    AssessmentStore.addAssessment(
+      Assessment(
+        studentName: widget.studentName,
+        materialTitle: widget.materialTitle,
+        date: DateTime.now(),
+        accuracy:
+            (accuracy['accuracy'] as num).toDouble(),
+        wpm:
+            (wpm['wpm'] as num).toDouble(),
+        comprehension:
+            (comprehension['score'] as num).toDouble(),
+        classification: classification,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -727,6 +768,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
+                  saveAssessment();
                   Navigator.popUntil(
                     context,
                     (route) => route.isFirst,

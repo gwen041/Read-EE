@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/class_section.dart';
+import '../services/assessment_store.dart';
 import 'materials_screen.dart';
 import 'reading_screen.dart';
 import 'assessments_screen.dart';
@@ -12,7 +13,8 @@ class DashboardScreen extends StatefulWidget {
   DashboardScreen({
     super.key,
     List<ClassSection>? classes,
-  }) : classes = classes ?? [
+  }) : classes = classes ??
+        [
           ClassSection(
             gradeLevel: 'Grade 4',
             sectionName: 'Narra',
@@ -27,10 +29,13 @@ class DashboardScreen extends StatefulWidget {
         ];
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
+  State<DashboardScreen> createState() =>
+      _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState
+    extends State<DashboardScreen> {
+
   int get totalStudents {
     int total = 0;
 
@@ -39,6 +44,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     return total;
+  }
+
+  int get totalAssessments {
+    return AssessmentStore.assessments.length;
   }
 
   Future<void> openClasses() async {
@@ -51,7 +60,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
 
-    // Rebuild the dashboard after returning from My Classes.
+    setState(() {});
+  }
+
+  Future<void> openAssessments() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            const AssessmentsScreen(),
+      ),
+    );
+
     setState(() {});
   }
 
@@ -59,12 +79,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('READ-EE Dashboard'),
+        title: const Text(
+          'READ-EE Dashboard',
+        ),
       ),
+
       body: Padding(
         padding: const EdgeInsets.all(24.0),
+
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
+
           children: [
             const Text(
               'Teacher Dashboard',
@@ -78,7 +104,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
             const Text(
               'Manage students and reading assessments.',
-              style: TextStyle(fontSize: 16),
+              style: TextStyle(
+                fontSize: 16,
+              ),
             ),
 
             const SizedBox(height: 30),
@@ -88,21 +116,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Expanded(
                   child: Card(
                     child: Padding(
-                      padding: const EdgeInsets.all(20.0),
+                      padding:
+                          const EdgeInsets.all(20.0),
+
                       child: Column(
                         children: [
                           const Text(
                             'Students',
-                            style: TextStyle(fontSize: 18),
+                            style: TextStyle(
+                              fontSize: 18,
+                            ),
                           ),
 
                           const SizedBox(height: 10),
 
                           Text(
                             '$totalStudents',
-                            style: const TextStyle(
+                            style:
+                                const TextStyle(
                               fontSize: 30,
-                              fontWeight: FontWeight.bold,
+                              fontWeight:
+                                  FontWeight.bold,
                             ),
                           ),
                         ],
@@ -116,21 +150,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Expanded(
                   child: Card(
                     child: Padding(
-                      padding: const EdgeInsets.all(20.0),
+                      padding:
+                          const EdgeInsets.all(20.0),
+
                       child: Column(
-                        children: const [
-                          Text(
+                        children: [
+                          const Text(
                             'Assessments',
-                            style: TextStyle(fontSize: 18),
+                            style: TextStyle(
+                              fontSize: 18,
+                            ),
                           ),
 
-                          SizedBox(height: 10),
+                          const SizedBox(height: 10),
 
                           Text(
-                            '0',
-                            style: TextStyle(
+                            '$totalAssessments',
+                            style:
+                                const TextStyle(
                               fontSize: 30,
-                              fontWeight: FontWeight.bold,
+                              fontWeight:
+                                  FontWeight.bold,
                             ),
                           ),
                         ],
@@ -155,7 +195,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
             ElevatedButton(
               onPressed: openClasses,
-              child: const Text('MY CLASSES'),
+              child: const Text(
+                'MY CLASSES',
+              ),
             ),
 
             const SizedBox(height: 10),
@@ -165,11 +207,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const MaterialsScreen(),
+                    builder: (context) =>
+                        const MaterialsScreen(),
                   ),
                 );
               },
-              child: const Text('Reading Materials'),
+              child: const Text(
+                'Reading Materials',
+              ),
             ),
 
             const SizedBox(height: 10),
@@ -179,27 +224,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ReadingScreen(
+                    builder: (context) =>
+                        ReadingScreen(
                       classes: widget.classes,
                     ),
                   ),
                 );
               },
-              child: const Text('START ASSESSMENT'),
+              child: const Text(
+                'START ASSESSMENT',
+              ),
             ),
 
             const SizedBox(height: 10),
 
             ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AssessmentsScreen(),
-                  ),
-                );
-              },
-              child: const Text('View Assessments'),
+              onPressed: openAssessments,
+              child: const Text(
+                'View Assessments',
+              ),
             ),
           ],
         ),
