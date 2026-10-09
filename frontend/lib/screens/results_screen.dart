@@ -797,7 +797,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
                   Navigator.popUntil(
                     context,
-                    (route) => route.isFirst,
+                    (route) =>
+                        route.settings.name == '/dashboard',
                   );
                 },
                 child: const Text(

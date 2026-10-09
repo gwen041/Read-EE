@@ -103,6 +103,9 @@ class _CreateSectionScreenState extends State<CreateSectionScreen> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
+        settings: const RouteSettings(
+          name: '/dashboard',
+        ),
         builder: (context) => DashboardScreen(
           classes: createdClasses,
         ),

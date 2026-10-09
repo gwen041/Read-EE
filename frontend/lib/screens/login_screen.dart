@@ -52,7 +52,11 @@ class LoginScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => DashboardScreen(),
+                      settings: const RouteSettings(
+                        name: '/dashboard',
+                      ),
+                      builder: (context) =>
+                          DashboardScreen(),
                     ),
                   );
                 },
@@ -67,11 +71,14 @@ class LoginScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const RegisterScreen(),
+                    builder: (context) =>
+                        const RegisterScreen(),
                   ),
                 );
               },
-              child: const Text('CREATE ACCOUNT'),
+              child: const Text(
+                'CREATE ACCOUNT',
+              ),
             ),
           ],
         ),
