@@ -1,3 +1,6 @@
+require('dotenv').config();
+
+const prisma = require('./prisma');
 const express = require('express');
 const { spawn } = require('child_process');
 const multer = require('multer');
@@ -35,6 +38,23 @@ app.get('/api/test', (req, res) => {
   res.json({
     message: 'Read-EE API is working!'
   });
+});
+
+app.get('/api/db-test', async (req, res) => {
+  try {
+    const teachers = await prisma.teacher.findMany();
+    res.json({
+      success: true,
+      message: 'PostgreSQL connection via Prisma is working!',
+      teacherCount: teachers.length
+    });
+  } catch (error) {
+    console.error('Database connection test error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
 });
 
 
