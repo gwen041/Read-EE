@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Teacher {
+  id            Int               @id @default(autoincrement())
+  fullName      String
+  email         String            @unique
+  passwordHash  String
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  classSections ClassSection[]
+  materials     ReadingMaterial[]
+}
+
+model ClassSection {
+  id          Int       @id @default(autoincrement())
+  gradeLevel  Int
+  sectionName String
+  teacherId   Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  teacher     Teacher   @relation(fields: [teacherId], references: [id])
+  students    Student[]
+
+  @@unique([teacherId, gradeLevel, sectionName])
+  @@index([teacherId])
+}
+
+model Student {
+  id             Int          @id @default(autoincrement())
+  fullName       String
+  classSectionId Int
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  assessments    Assessment[]
+  classSection   ClassSection @relation(fields: [classSectionId], references: [id])
+
+  @@index([classSectionId])
+}
+
+model ReadingMaterial {
+  id           Int                     @id @default(autoincrement())
+  title        String
+  passage      String
+  materialType MaterialType
+  teacherId    Int?
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+  assessments  Assessment[]
+  questions    ComprehensionQuestion[]
+  teacher      Teacher?                @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+
+  @@index([teacherId])
+  @@index([materialType])
+}
+
+model ComprehensionQuestion {
+  id                Int             @id @default(autoincrement())
+  readingMaterialId Int
+  questionText      String
+  choiceA           String
+  choiceB           String
+  choiceC           String
+  choiceD           String
+  correctAnswer     String
+  questionOrder     Int
+  createdAt         DateTime        @default(now())
+  readingMaterial   ReadingMaterial @relation(fields: [readingMaterialId], references: [id], onDelete: Cascade)
+
+  @@unique([readingMaterialId, questionOrder])
+  @@index([readingMaterialId])
+}
+
+model Assessment {
+  id                   Int             @id @default(autoincrement())
+  studentId            Int
+  readingMaterialId    Int
+  accuracy             Float
+  wpm                  Float
+  comprehensionScore   Int
+  classification       String
+  accuracyDetails      Json?
+  comprehensionDetails Json?
+  createdAt            DateTime        @default(now())
+  readingMaterial      ReadingMaterial @relation(fields: [readingMaterialId], references: [id])
+  student              Student         @relation(fields: [studentId], references: [id])
+
+  @@index([studentId, createdAt])
+  @@index([readingMaterialId])
+}
+
+enum MaterialType {
+  BUILT_IN
+  TEACHER_CREATED
+}
