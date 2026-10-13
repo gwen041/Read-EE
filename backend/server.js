@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const prisma = require('./prisma');
+const authRoutes = require('./routes/auth');
 const express = require('express');
 const { spawn } = require('child_process');
 const multer = require('multer');
@@ -16,6 +17,7 @@ const upload = multer({
 });
 
 app.use(express.json());
+app.use('/api/auth', authRoutes);
 
 const PORT = 3000;
 
