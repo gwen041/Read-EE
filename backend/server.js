@@ -45,27 +45,18 @@ app.get('/api/db-test', async (req, res) => {
     const teachers = await prisma.teacher.findMany();
     res.json({
       success: true,
-      message: 'PostgreSQL connection via Prisma is working!',
+      message: 'PostgreSQL connection via Prisma is healthy!',
       teacherCount: teachers.length
     });
   } catch (error) {
     console.error('Database connection test error:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      message: 'Unable to connect to the database. Please verify PostgreSQL service is running.'
     });
   }
 });
 
-
-/*
- * Initial assessment
- *
- * Flutter sends:
- * - audioFile
- * - expectedText
- * - studentAnswers
- */
 app.post(
   '/api/assessment',
   upload.single('audioFile'),
@@ -138,16 +129,6 @@ app.post(
   }
 );
 
-
-/*
- * Finalize assessment after teacher verification
- *
- * Flutter sends:
- * - original accuracy result
- * - WPM result
- * - comprehension result
- * - teacher decisions
- */
 app.post('/api/assessment/finalize', (req, res) => {
 
   const {
@@ -262,3 +243,12 @@ app.listen(PORT, () => {
     `Server running on http://localhost:${PORT}`
   );
 });
+
+async function handleShutdown() {
+  console.log('\nShutting down server cleanly...');
+  await prisma.$disconnect();
+  process.exit(0);
+}
+
+process.on('SIGINT', handleShutdown);
+process.on('SIGTERM', handleShutdown);
