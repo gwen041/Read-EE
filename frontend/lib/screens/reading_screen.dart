@@ -119,8 +119,8 @@ class _ReadingScreenState extends State<ReadingScreen> {
               initialValue: selectedStudent,
               items: students.map((student) {
                 return DropdownMenuItem<String>(
-                  value: student,
-                  child: Text(student),
+                  value: student.fullName,
+                  child: Text(student.fullName),
                 );
               }).toList(),
               onChanged: selectedClass == null || students.isEmpty

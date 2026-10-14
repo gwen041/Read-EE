@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-
 import '../models/class_section.dart';
+import '../services/class_service.dart';
 
 class AddClassDialog extends StatefulWidget {
   final List<ClassSection> classes;
@@ -16,9 +16,8 @@ class AddClassDialog extends StatefulWidget {
 
 class _AddClassDialogState extends State<AddClassDialog> {
   String selectedGrade = 'Grade 4';
-
-  final TextEditingController sectionController =
-      TextEditingController();
+  final TextEditingController sectionController = TextEditingController();
+  bool _isSaving = false;
 
   @override
   void dispose() {
@@ -26,14 +25,12 @@ class _AddClassDialogState extends State<AddClassDialog> {
     super.dispose();
   }
 
-  void addClass() {
+  Future<void> addClass() async {
     final sectionName = sectionController.text.trim();
 
     if (sectionName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a section name.'),
-        ),
+        const SnackBar(content: Text('Please enter a section name.')),
       );
       return;
     }
@@ -41,131 +38,88 @@ class _AddClassDialogState extends State<AddClassDialog> {
     final sectionExists = widget.classes.any(
       (classSection) =>
           classSection.gradeLevel == selectedGrade &&
-          classSection.sectionName.toLowerCase() ==
-              sectionName.toLowerCase(),
+          classSection.sectionName.toLowerCase() == sectionName.toLowerCase(),
     );
 
     if (sectionExists) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'That section already exists for this grade.',
-          ),
-        ),
+        const SnackBar(content: Text('That section already exists for this grade.')),
       );
       return;
     }
 
-    final newClass = ClassSection(
-      gradeLevel: selectedGrade,
-      sectionName: sectionName,
-    );
+    setState(() => _isSaving = true);
 
-    Navigator.pop(context, newClass);
+    try {
+      final newClass = await ClassService.createSection(
+        gradeLevel: selectedGrade,
+        sectionName: sectionName,
+      );
+
+      if (!mounted) return;
+      Navigator.pop(context, newClass);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+      );
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: SizedBox(
-          width: 500,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Add Class',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              const Text(
-                'Grade Level',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              DropdownButtonFormField<String>(
-                initialValue: selectedGrade,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                ),
-                items: const [
-                  DropdownMenuItem(
-                    value: 'Grade 4',
-                    child: Text('Grade 4'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'Grade 5',
-                    child: Text('Grade 5'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'Grade 6',
-                    child: Text('Grade 6'),
-                  ),
-                ],
-                onChanged: (value) {
-                  if (value == null) return;
-
-                  setState(() {
-                    selectedGrade = value;
-                  });
-                },
-              ),
-
-              const SizedBox(height: 20),
-
-              const Text(
-                'Section Name',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              TextField(
-                controller: sectionController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'e.g. Narra',
-                ),
-              ),
-
-              const SizedBox(height: 25),
-
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: addClass,
-                  child: const Text('ADD CLASS'),
-                ),
-              ),
+    return AlertDialog(
+      title: const Text('Add Class Section'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DropdownButtonFormField<String>(
+            initialValue: selectedGrade,
+            decoration: const InputDecoration(
+              labelText: 'Grade Level',
+              border: OutlineInputBorder(),
+            ),
+            items: const [
+              DropdownMenuItem(value: 'Grade 4', child: Text('Grade 4')),
+              DropdownMenuItem(value: 'Grade 5', child: Text('Grade 5')),
+              DropdownMenuItem(value: 'Grade 6', child: Text('Grade 6')),
             ],
+            onChanged: (value) {
+              if (value != null) {
+                setState(() => selectedGrade = value);
+              }
+            },
           ),
-        ),
+          const SizedBox(height: 15),
+          TextField(
+            controller: sectionController,
+            decoration: const InputDecoration(
+              labelText: 'Section Name',
+              hintText: 'e.g. Narra, Daisy, Amber',
+              border: OutlineInputBorder(),
+            ),
+            onSubmitted: (_) => addClass(),
+          ),
+        ],
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('CANCEL'),
+        ),
+        ElevatedButton(
+          onPressed: _isSaving ? null : addClass,
+          child: _isSaving
+              ? const SizedBox(
+                  height: 16,
+                  width: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('SAVE'),
+        ),
+      ],
     );
   }
 }

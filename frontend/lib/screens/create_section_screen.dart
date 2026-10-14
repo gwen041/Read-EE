@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../services/class_service.dart';
 import 'dashboard_screen.dart';
-import '../models/class_section.dart';
 
 class CreateSectionScreen extends StatefulWidget {
   final List<String> selectedGrades;
@@ -16,13 +16,12 @@ class CreateSectionScreen extends StatefulWidget {
 
 class _CreateSectionScreenState extends State<CreateSectionScreen> {
   final Map<String, List<String>> sections = {};
-
   final Map<String, TextEditingController> controllers = {};
+  bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
-
     for (final grade in widget.selectedGrades) {
       sections[grade] = [];
       controllers[grade] = TextEditingController();
@@ -34,7 +33,6 @@ class _CreateSectionScreenState extends State<CreateSectionScreen> {
     for (final controller in controllers.values) {
       controller.dispose();
     }
-
     super.dispose();
   }
 
@@ -44,9 +42,7 @@ class _CreateSectionScreenState extends State<CreateSectionScreen> {
 
     if (sectionName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a section name.'),
-        ),
+        const SnackBar(content: Text('Please enter a section name.')),
       );
       return;
     }
@@ -57,9 +53,7 @@ class _CreateSectionScreenState extends State<CreateSectionScreen> {
 
     if (sectionExists) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('That section already exists.'),
-        ),
+        const SnackBar(content: Text('That section already exists.')),
       );
       return;
     }
@@ -70,7 +64,7 @@ class _CreateSectionScreenState extends State<CreateSectionScreen> {
     });
   }
 
-  void finishSetup() {
+  Future<void> finishSetup() async {
     final missingGrades = widget.selectedGrades.where(
       (grade) => sections[grade]!.isEmpty,
     );
@@ -79,39 +73,46 @@ class _CreateSectionScreenState extends State<CreateSectionScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Please create at least one section for '
-            '${missingGrades.join(', ')}.',
+            'Please create at least one section for ${missingGrades.join(', ')}.',
           ),
         ),
       );
       return;
     }
 
-    final List<ClassSection> createdClasses = [];
-
+    final List<Map<String, String>> batchData = [];
     for (final entry in sections.entries) {
       for (final sectionName in entry.value) {
-        createdClasses.add(
-          ClassSection(
-            gradeLevel: entry.key,
-            sectionName: sectionName,
-          ),
-        );
+        batchData.add({
+          'gradeLevel': entry.key,
+          'sectionName': sectionName,
+        });
       }
     }
 
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-        settings: const RouteSettings(
-          name: '/dashboard',
+    setState(() => _isSaving = true);
+
+    try {
+      final createdClasses = await ClassService.createSectionsBatch(batchData);
+
+      if (!mounted) return;
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          settings: const RouteSettings(name: '/dashboard'),
+          builder: (context) => DashboardScreen(classes: createdClasses),
         ),
-        builder: (context) => DashboardScreen(
-          classes: createdClasses,
-        ),
-      ),
-      (route) => false,
-    );
+        (route) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+      );
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   @override
@@ -126,22 +127,18 @@ class _CreateSectionScreenState extends State<CreateSectionScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Create Your Sections',
+              'Create Class Sections',
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 10),
-
             const Text(
-              'Create the sections you handle for each grade level.',
+              'Add at least one section for each selected grade level.',
               style: TextStyle(fontSize: 16),
             ),
-
             const SizedBox(height: 25),
-
             Expanded(
               child: ListView(
                 children: [
@@ -153,9 +150,7 @@ class _CreateSectionScreenState extends State<CreateSectionScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-
                     const SizedBox(height: 10),
-
                     Row(
                       children: [
                         Expanded(
@@ -163,54 +158,50 @@ class _CreateSectionScreenState extends State<CreateSectionScreen> {
                             controller: controllers[grade],
                             decoration: const InputDecoration(
                               labelText: 'Section Name',
-                              hintText: 'e.g. Narra',
                               border: OutlineInputBorder(),
                             ),
+                            onSubmitted: (_) => addSection(grade),
                           ),
                         ),
-
                         const SizedBox(width: 10),
-
                         ElevatedButton(
                           onPressed: () => addSection(grade),
                           child: const Text('ADD'),
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 10),
-
-                    if (sections[grade]!.isEmpty)
-                      const Text(
-                        'No sections added yet.',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-
-                    for (final section in sections[grade]!)
-                      ListTile(
-                        leading: const Icon(Icons.class_),
-                        title: Text(section),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () {
-                            setState(() {
-                              sections[grade]!.remove(section);
-                            });
-                          },
-                        ),
-                      ),
-
-                    const SizedBox(height: 25),
+                    Wrap(
+                      spacing: 8.0,
+                      children: [
+                        for (final section in sections[grade]!)
+                          Chip(
+                            label: Text(section),
+                            onDeleted: () {
+                              setState(() {
+                                sections[grade]!.remove(section);
+                              });
+                            },
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
                   ],
                 ],
               ),
             ),
-
             SizedBox(
               width: double.infinity,
+              height: 48,
               child: ElevatedButton(
-                onPressed: finishSetup,
-                child: const Text('FINISH SETUP'),
+                onPressed: _isSaving ? null : finishSetup,
+                child: _isSaving
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('FINISH SETUP'),
               ),
             ),
           ],
