@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:db": "node test-db.js",
-    "studio": "prisma studio"
+    "studio": "prisma studio",
+    "seed": "node prisma/seed.js"
   },
   "keywords": [],
   "author": "",
