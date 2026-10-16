@@ -3,6 +3,7 @@ require('dotenv').config();
 const prisma = require('./prisma');
 const authRoutes = require('./routes/auth');
 const classRoutes = require('./routes/classes');
+const materialRoutes = require('./routes/materials');
 const express = require('express');
 const { spawn } = require('child_process');
 const multer = require('multer');
@@ -20,6 +21,7 @@ const upload = multer({
 app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/classes', classRoutes);
+app.use('/api/materials', materialRoutes);
 
 const PORT = 3000;
 
