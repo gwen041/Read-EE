@@ -1,19 +1,26 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import '../models/reading_material.dart';
 import 'quiz_screen.dart';
 
 class RecordingReviewScreen extends StatefulWidget {
+  final int? studentId;
   final String studentName;
+  final int? materialId;
   final String materialTitle;
   final String passage;
   final String audioPath;
+  final List<ComprehensionQuestionItem> questions;
 
   const RecordingReviewScreen({
     super.key,
+    this.studentId,
     required this.studentName,
+    this.materialId,
     required this.materialTitle,
     required this.passage,
     required this.audioPath,
+    this.questions = const [],
   });
 
   @override
@@ -243,10 +250,13 @@ class _RecordingReviewScreenState
                     context,
                     MaterialPageRoute(
                       builder: (context) => QuizScreen(
+                        studentId: widget.studentId,
                         studentName: widget.studentName,
+                        materialId: widget.materialId,
                         materialTitle: widget.materialTitle,
                         passage: widget.passage,
                         audioPath: widget.audioPath,
+                        questions: widget.questions,
                       ),
                     ),
                   );

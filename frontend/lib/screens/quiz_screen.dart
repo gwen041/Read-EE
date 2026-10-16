@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
+import '../models/reading_material.dart';
 import 'results_screen.dart';
 
 class QuizScreen extends StatefulWidget {
+  final int? studentId;
   final String studentName;
+  final int? materialId;
   final String materialTitle;
   final String passage;
   final String audioPath;
+  final List<ComprehensionQuestionItem> questions;
 
   const QuizScreen({
     super.key,
+    this.studentId,
     required this.studentName,
+    this.materialId,
     required this.materialTitle,
     required this.passage,
     required this.audioPath,
+    this.questions = const [],
   });
 
   @override
@@ -20,59 +27,12 @@ class QuizScreen extends StatefulWidget {
 }
 
 class _QuizScreenState extends State<QuizScreen> {
-  final Map<int, String> answers = {};
-
-  final questions = [
-    {
-      'question': 'Where did the boy go?',
-      'choices': [
-        'He went to the park.',
-        'He went to the school.',
-        'He went to the store.',
-        'He went to the library.',
-      ],
-    },
-    {
-      'question': 'Why do you think the boy went to school early?',
-      'choices': [
-        'He wanted to play outside.',
-        'He wanted to arrive at school before his class started.',
-        'He wanted to buy some food.',
-        'He wanted to go back home.',
-      ],
-    },
-    {
-      'question': 'What can you tell about the boy from the story?',
-      'choices': [
-        'He was prepared for school.',
-        'He did not like his teacher.',
-        'He forgot his school books.',
-        'He was going to the park.',
-      ],
-    },
-    {
-      'question':
-          'What would most likely happen after the boy greeted his teacher?',
-      'choices': [
-        'He would enter his classroom.',
-        'He would go back home.',
-        'He would go to the store.',
-        'He would take a nap.',
-      ],
-    },
-    {
-      'question': 'Which title would be best for the story?',
-      'choices': [
-        'A Morning at the Park',
-        "The Boy's School Morning",
-        'The Lost School Bag',
-        'A Trip to the Store',
-      ],
-    },
-  ];
+  final Map<int, String> answers = {}; // Stores 'A', 'B', 'C', or 'D' per question index
 
   @override
   Widget build(BuildContext context) {
+    final quizQuestions = widget.questions;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Comprehension Quiz'),
@@ -81,21 +41,25 @@ class _QuizScreenState extends State<QuizScreen> {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            const Text(
-              'Comprehension Quiz',
-              style: TextStyle(
-                fontSize: 28,
+            Text(
+              'Comprehension Quiz: ${widget.materialTitle}',
+              style: const TextStyle(
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 20),
-
             Expanded(
               child: ListView.builder(
-                itemCount: questions.length,
+                itemCount: quizQuestions.length,
                 itemBuilder: (context, index) {
-                  final question = questions[index];
+                  final q = quizQuestions[index];
+                  final choices = [
+                    {'letter': 'A', 'text': q.choiceA},
+                    {'letter': 'B', 'text': q.choiceB},
+                    {'letter': 'C', 'text': q.choiceC},
+                    {'letter': 'D', 'text': q.choiceD},
+                  ];
 
                   return Card(
                     margin: const EdgeInsets.only(bottom: 20),
@@ -105,15 +69,13 @@ class _QuizScreenState extends State<QuizScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${index + 1}. ${question['question']}',
+                            '${index + 1}. ${q.questionText}',
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-
                           const SizedBox(height: 10),
-
                           RadioGroup<String>(
                             groupValue: answers[index],
                             onChanged: (value) {
@@ -122,16 +84,14 @@ class _QuizScreenState extends State<QuizScreen> {
                               });
                             },
                             child: Column(
-                              children: [
-                                ...List<String>.from(
-                                  question['choices'] as List,
-                                ).map(
-                                  (choice) => RadioListTile<String>(
-                                    title: Text(choice),
-                                    value: choice,
-                                  ),
-                                ),
-                              ],
+                              children: choices.map((choice) {
+                                final letter = choice['letter']!;
+                                final text = choice['text']!;
+                                return RadioListTile<String>(
+                                  title: Text('$letter. $text'),
+                                  value: letter,
+                                );
+                              }).toList(),
                             ),
                           ),
                         ],
@@ -141,12 +101,12 @@ class _QuizScreenState extends State<QuizScreen> {
                 },
               ),
             ),
-
             SizedBox(
               width: double.infinity,
+              height: 48,
               child: ElevatedButton(
                 onPressed: () {
-                  if (answers.length != questions.length) {
+                  if (answers.length != quizQuestions.length) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text(

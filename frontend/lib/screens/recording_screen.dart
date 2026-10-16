@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:record/record.dart';
+import '../models/reading_material.dart';
 import 'recording_review_screen.dart';
 
 class RecordingScreen extends StatefulWidget {
+  final int? studentId;
   final String studentName;
+  final int? materialId;
   final String materialTitle;
   final String passage;
+  final List<ComprehensionQuestionItem> questions;
 
   const RecordingScreen({
     super.key,
+    this.studentId,
     required this.studentName,
+    this.materialId,
     required this.materialTitle,
     required this.passage,
+    this.questions = const [],
   });
 
   @override
@@ -20,7 +27,6 @@ class RecordingScreen extends StatefulWidget {
 
 class _RecordingScreenState extends State<RecordingScreen> {
   final AudioRecorder recorder = AudioRecorder();
-
   bool isRecording = false;
 
   @override
@@ -34,7 +40,6 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
     if (!hasPermission) {
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Microphone permission is required.'),
@@ -68,10 +73,13 @@ class _RecordingScreenState extends State<RecordingScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => RecordingReviewScreen(
+          studentId: widget.studentId,
           studentName: widget.studentName,
+          materialId: widget.materialId,
           materialTitle: widget.materialTitle,
           passage: widget.passage,
           audioPath: path,
+          questions: widget.questions,
         ),
       ),
     );
@@ -95,18 +103,14 @@ class _RecordingScreenState extends State<RecordingScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 8),
-
             Text(
               widget.materialTitle,
               style: const TextStyle(
                 fontSize: 18,
               ),
             ),
-
             const SizedBox(height: 25),
-
             const Text(
               'Read the passage aloud.',
               style: TextStyle(
@@ -114,9 +118,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 12),
-
             Expanded(
               child: Container(
                 width: double.infinity,
@@ -136,31 +138,23 @@ class _RecordingScreenState extends State<RecordingScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 20),
-
             Center(
               child: Icon(
                 isRecording ? Icons.mic : Icons.mic_none,
                 size: 60,
               ),
             ),
-
             const SizedBox(height: 15),
-
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: isRecording
-                    ? stopRecording
-                    : startRecording,
+                onPressed: isRecording ? stopRecording : startRecording,
                 icon: Icon(
                   isRecording ? Icons.stop : Icons.mic,
                 ),
                 label: Text(
-                  isRecording
-                      ? 'STOP RECORDING'
-                      : 'START RECORDING',
+                  isRecording ? 'STOP RECORDING' : 'START RECORDING',
                 ),
               ),
             ),
