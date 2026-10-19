@@ -4,10 +4,12 @@ const prisma = require('./prisma');
 const authRoutes = require('./routes/auth');
 const classRoutes = require('./routes/classes');
 const materialRoutes = require('./routes/materials');
+const assessmentRoutes = require('./routes/assessments');
 const express = require('express');
 const { spawn } = require('child_process');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const cors = require('cors');
 
 const app = express();
@@ -22,6 +24,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/classes', classRoutes);
 app.use('/api/materials', materialRoutes);
+app.use('/api/assessments', assessmentRoutes);
 
 const PORT = 3000;
 
@@ -66,12 +69,52 @@ app.get('/api/db-test', async (req, res) => {
 app.post(
   '/api/assessment',
   upload.single('audioFile'),
-  (req, res) => {
+  async (req, res) => {
 
     if (!req.file) {
       return res.status(400).json({
         message: 'Audio file is required.'
       });
+    }
+
+    const uploadedFilePath = path.resolve(req.file.path);
+
+    let dbQuestions = null;
+    try {
+      const materialId = req.body.readingMaterialId
+        ? Number(req.body.readingMaterialId)
+        : null;
+
+      let material = null;
+      if (materialId && Number.isInteger(materialId)) {
+        material = await prisma.readingMaterial.findUnique({
+          where: { id: materialId },
+          include: {
+            questions: {
+              orderBy: { questionOrder: 'asc' }
+            }
+          }
+        });
+      } else if (req.body.expectedText) {
+        material = await prisma.readingMaterial.findFirst({
+          where: { passage: req.body.expectedText },
+          include: {
+            questions: {
+              orderBy: { questionOrder: 'asc' }
+            }
+          }
+        });
+      }
+
+      if (material && material.questions && material.questions.length > 0) {
+        dbQuestions = material.questions.map((q) => ({
+          question: q.questionText,
+          answer: q.correctAnswer,
+          type: 'literal'
+        }));
+      }
+    } catch (dbErr) {
+      console.error('Warning: Failed to load material questions from DB:', dbErr);
     }
 
     const python = spawn(
@@ -84,11 +127,12 @@ app.post(
 
     const assessmentData = {
       action: 'assessment',
-      audioFile: path.resolve(req.file.path),
+      audioFile: uploadedFilePath,
       expectedText: req.body.expectedText,
       studentAnswers: JSON.parse(
         req.body.studentAnswers
-      )
+      ),
+      questions: dbQuestions
     };
 
     python.stdin.write(
@@ -108,6 +152,7 @@ app.post(
     });
 
     python.on('close', (code) => {
+      fs.unlink(uploadedFilePath, () => {});
 
       console.log(
         `Python process exited with code ${code}`
