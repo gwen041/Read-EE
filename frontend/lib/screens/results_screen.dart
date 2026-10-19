@@ -6,7 +6,9 @@ import '../services/assessment_store.dart';
 import 'reading_verification_screen.dart';
 
 class ResultsScreen extends StatefulWidget {
+  final int? studentId;
   final String studentName;
+  final int? materialId;
   final String materialTitle;
   final String passage;
   final String audioPath;
@@ -14,7 +16,9 @@ class ResultsScreen extends StatefulWidget {
 
   const ResultsScreen({
     super.key,
+    this.studentId,
     required this.studentName,
+    this.materialId,
     required this.materialTitle,
     required this.passage,
     required this.audioPath,
@@ -37,6 +41,9 @@ class _ResultsScreenState extends State<ResultsScreen> {
   // Keeps the original automated assessment.
   Map<String, dynamic>? initialResult;
 
+  // Tracks the saved PostgreSQL Assessment ID so verification updates the same row.
+  int? _savedAssessmentId;
+
   @override
   void initState() {
     super.initState();
@@ -52,6 +59,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
         audioPath: widget.audioPath,
         passage: widget.passage,
         studentAnswers: studentAnswers,
+        readingMaterialId: widget.materialId,
       );
 
       if (!mounted) return;
@@ -61,6 +69,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
         initialResult = response;
         isLoading = false;
       });
+
+      await _persistAssessmentToDatabase();
     } catch (error) {
       if (!mounted) return;
 
@@ -68,6 +78,63 @@ class _ResultsScreenState extends State<ResultsScreen> {
         errorMessage = error.toString();
         isLoading = false;
       });
+    }
+  }
+
+  Future<void> _persistAssessmentToDatabase() async {
+    if (result == null) return;
+    if (widget.studentId == null || widget.materialId == null) return;
+
+    try {
+      final accuracy = Map<String, dynamic>.from(result!['accuracy']);
+      final wpm = Map<String, dynamic>.from(result!['wpm']);
+      final comprehension = Map<String, dynamic>.from(result!['comprehension']);
+      final classification = result!['classification'].toString();
+
+      final initialAccuracy = initialResult?['accuracy'];
+      final initialAccuracyValue = initialAccuracy != null
+          ? (initialAccuracy['accuracy'] as num).toDouble()
+          : (accuracy['accuracy'] as num).toDouble();
+
+      final accuracyDetails = {
+        ...accuracy,
+        'initialAccuracy': initialAccuracyValue,
+        'isVerified': isFinalized,
+      };
+
+      if (_savedAssessmentId == null) {
+        final saved = await AssessmentService.saveAssessment(
+          studentId: widget.studentId!,
+          readingMaterialId: widget.materialId!,
+          accuracy: (accuracy['accuracy'] as num).toDouble(),
+          wpm: (wpm['wpm'] as num).toDouble(),
+          comprehensionScore: (comprehension['score'] as num).toDouble(),
+          classification: classification,
+          accuracyDetails: accuracyDetails,
+          comprehensionDetails: comprehension,
+        );
+        _savedAssessmentId = saved.id;
+      } else {
+        await AssessmentService.updateAssessment(
+          assessmentId: _savedAssessmentId!,
+          accuracy: (accuracy['accuracy'] as num).toDouble(),
+          wpm: (wpm['wpm'] as num).toDouble(),
+          comprehensionScore: (comprehension['score'] as num).toDouble(),
+          classification: classification,
+          accuracyDetails: accuracyDetails,
+          comprehensionDetails: comprehension,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Warning: Could not save assessment to database: '
+            '${e.toString().replaceAll('Exception: ', '')}',
+          ),
+        ),
+      );
     }
   }
 
@@ -79,6 +146,12 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
       if (selectedAnswer == null) {
         answers.add('');
+        continue;
+      }
+
+      final upper = selectedAnswer.trim().toUpperCase();
+      if (['A', 'B', 'C', 'D'].contains(upper)) {
+        answers.add(upper);
         continue;
       }
 
@@ -227,6 +300,10 @@ class _ResultsScreenState extends State<ResultsScreen> {
         isLoading = false;
       });
 
+      await _persistAssessmentToDatabase();
+
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -288,6 +365,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
     AssessmentStore.addAssessment(
       Assessment(
+        id: _savedAssessmentId,
         studentName: widget.studentName,
         materialTitle: widget.materialTitle,
         passage: widget.passage,
@@ -798,7 +876,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
                   Navigator.popUntil(
                     context,
                     (route) =>
-                        route.settings.name == '/dashboard',
+                        route.settings.name == '/dashboard' ||
+                        route.isFirst,
                   );
                 },
                 child: const Text(

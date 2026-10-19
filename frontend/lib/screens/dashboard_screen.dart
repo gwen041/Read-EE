@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/class_section.dart';
-import '../services/assessment_store.dart';
+import '../services/assessment_service.dart';
 import '../services/auth_service.dart';
 import '../services/class_service.dart';
 import 'materials_screen.dart';
@@ -23,6 +23,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   List<ClassSection> _classes = [];
+  int _assessmentCount = 0;
   bool _isLoading = true;
 
   @override
@@ -31,18 +32,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (widget.classes != null && widget.classes!.isNotEmpty) {
       _classes = widget.classes!;
       _isLoading = false;
+      _loadDashboardData(showSpinner: false);
     } else {
-      _loadClasses();
+      _loadDashboardData();
     }
   }
 
-  Future<void> _loadClasses() async {
-    setState(() => _isLoading = true);
+  Future<void> _loadDashboardData({bool showSpinner = true}) async {
+    if (showSpinner) {
+      setState(() => _isLoading = true);
+    }
     try {
-      final fetched = await ClassService.getClasses();
+      final fetchedClasses = await ClassService.getClasses();
+      final fetchedAssessments = await AssessmentService.getAssessments();
       if (!mounted) return;
       setState(() {
-        _classes = fetched;
+        _classes = fetchedClasses;
+        _assessmentCount = fetchedAssessments.length;
         _isLoading = false;
       });
     } catch (_) {
@@ -60,7 +66,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   int get totalAssessments {
-    return AssessmentStore.assessments.length;
+    return _assessmentCount;
   }
 
   Future<void> openClasses() async {
@@ -72,7 +78,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
     );
-    _loadClasses();
+    _loadDashboardData(showSpinner: false);
   }
 
   Future<void> openReadingAssessment() async {
@@ -93,7 +99,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
     );
-    _loadClasses();
+    _loadDashboardData(showSpinner: false);
   }
 
   void openMaterials() {
@@ -105,13 +111,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void openAssessments() {
-    Navigator.push(
+  Future<void> openAssessments() async {
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => const AssessmentsScreen(),
       ),
     );
+    _loadDashboardData(showSpinner: false);
   }
 
   void handleLogout() {

@@ -291,9 +291,8 @@ class _ReadingVerificationScreenState
                     ...missingWords.map((item) {
                       final currentIndex = index++;
 
-                      return _buildSingleWordCard(
+                      return _buildMissingWordCard(
                         currentIndex,
-                        'Missing word',
                         item,
                       );
                     }),
@@ -302,9 +301,8 @@ class _ReadingVerificationScreenState
                     ...extraWords.map((item) {
                       final currentIndex = index++;
 
-                      return _buildSingleWordCard(
+                      return _buildExtraWordCard(
                         currentIndex,
-                        'Extra word',
                         item,
                       );
                     }),
@@ -456,83 +454,52 @@ class _ReadingVerificationScreenState
     );
   }
 
-  Widget _buildSingleWordCard(
+  Widget _buildMissingWordCard(
     int index,
-    String type,
     Map<String, dynamic> item,
   ) {
-    final word =
-        item['word'].toString();
-
-    final start =
-        (item['start'] as num?)?.toDouble();
-
-    final end =
-        (item['end'] as num?)?.toDouble();
-
-    final timestampType =
-        item['timestamp_type']?.toString();
+    final word = item['word'].toString();
+    final start = (item['start'] as num?)?.toDouble();
+    final end = (item['end'] as num?)?.toDouble();
+    final timestampType = item['timestamp_type']?.toString();
 
     return Card(
-      margin: const EdgeInsets.only(
-        bottom: 15,
-      ),
+      margin: const EdgeInsets.only(bottom: 15),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              type,
-              style: const TextStyle(
+            const Text(
+              'Missing word',
+              style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
               ),
             ),
-
             const SizedBox(height: 10),
-
             Text(
               word,
-              style: const TextStyle(
-                fontSize: 18,
-              ),
+              style: const TextStyle(fontSize: 18),
             ),
-
             const SizedBox(height: 10),
-
             if (start != null && end != null)
               Text(
                 timestampType == 'surrounding'
-                    ? 'Around: '
-                        '${formatTimestamp(start)} – '
-                        '${formatTimestamp(end)}'
-                    : 'Time: '
-                        '${formatTimestamp(start)} – '
-                        '${formatTimestamp(end)}',
-                style: const TextStyle(
-                  fontSize: 16,
-                ),
+                    ? 'Around: ${formatTimestamp(start)} – ${formatTimestamp(end)}'
+                    : 'Time: ${formatTimestamp(start)} – ${formatTimestamp(end)}',
+                style: const TextStyle(fontSize: 16),
               ),
-
             const SizedBox(height: 15),
-
             if (start != null && end != null)
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed:
-                      playingIndex == index
-                          ? stopSection
-                          : () => playSection(
-                                index,
-                                item,
-                              ),
+                  onPressed: playingIndex == index
+                      ? stopSection
+                      : () => playSection(index, item),
                   icon: Icon(
-                    playingIndex == index
-                        ? Icons.stop
-                        : Icons.play_arrow,
+                    playingIndex == index ? Icons.stop : Icons.play_arrow,
                   ),
                   label: Text(
                     playingIndex == index
@@ -541,12 +508,9 @@ class _ReadingVerificationScreenState
                   ),
                 ),
               ),
-
             const SizedBox(height: 10),
-
             RadioGroup<bool>(
-              groupValue:
-                  decisions[index],
+              groupValue: decisions[index],
               onChanged: (value) {
                 setState(() {
                   decisions[index] = value!;
@@ -556,15 +520,92 @@ class _ReadingVerificationScreenState
                 children: [
                   RadioListTile<bool>(
                     value: true,
-                    title: Text(
-                      'The word "$word" is missing',
-                    ),
+                    title: Text('The word "$word" is missing'),
                   ),
                   RadioListTile<bool>(
                     value: false,
-                    title: Text(
-                      'The word "$word" is not missing',
-                    ),
+                    title: Text('The word "$word" is not missing'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExtraWordCard(
+    int index,
+    Map<String, dynamic> item,
+  ) {
+    final word = item['word'].toString();
+    final start = (item['start'] as num?)?.toDouble();
+    final end = (item['end'] as num?)?.toDouble();
+    final timestampType = item['timestamp_type']?.toString();
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 15),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Extra word',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              word,
+              style: const TextStyle(fontSize: 18),
+            ),
+            const SizedBox(height: 10),
+            if (start != null && end != null)
+              Text(
+                timestampType == 'surrounding'
+                    ? 'Around: ${formatTimestamp(start)} – ${formatTimestamp(end)}'
+                    : 'Time: ${formatTimestamp(start)} – ${formatTimestamp(end)}',
+                style: const TextStyle(fontSize: 16),
+              ),
+            const SizedBox(height: 15),
+            if (start != null && end != null)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: playingIndex == index
+                      ? stopSection
+                      : () => playSection(index, item),
+                  icon: Icon(
+                    playingIndex == index ? Icons.stop : Icons.play_arrow,
+                  ),
+                  label: Text(
+                    playingIndex == index
+                        ? 'STOP SECTION'
+                        : 'PLAY THIS SECTION',
+                  ),
+                ),
+              ),
+            const SizedBox(height: 10),
+            RadioGroup<bool>(
+              groupValue: decisions[index],
+              onChanged: (value) {
+                setState(() {
+                  decisions[index] = value!;
+                });
+              },
+              child: Column(
+                children: [
+                  RadioListTile<bool>(
+                    value: true,
+                    title: Text('Student added the extra word "$word"'),
+                  ),
+                  RadioListTile<bool>(
+                    value: false,
+                    title: Text('Student did not say "$word"'),
                   ),
                 ],
               ),

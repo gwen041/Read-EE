@@ -1,9 +1,11 @@
-
 import 'package:flutter/material.dart';
 
+import 'screens/dashboard_screen.dart';
 import 'screens/landing_screen.dart';
+import 'services/auth_service.dart';
 
 void main() {
+  AuthService.init();
   runApp(const ReadEEApp());
 }
 
@@ -12,12 +14,15 @@ class ReadEEApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLoggedIn = AuthService.token != null;
+
     return MaterialApp(
       title: 'READ-EE',
       debugShowCheckedModeBanner: false,
-      initialRoute: '/',
+      initialRoute: isLoggedIn ? '/dashboard' : '/',
       routes: {
         '/': (context) => const LandingScreen(),
+        '/dashboard': (context) => const DashboardScreen(),
       },
       theme: ThemeData(
         useMaterial3: true,

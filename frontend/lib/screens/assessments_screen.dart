@@ -1,146 +1,175 @@
 import 'package:flutter/material.dart';
 
 import '../models/assessment.dart';
-import '../services/assessment_store.dart';
+import '../services/assessment_service.dart';
 
-class AssessmentsScreen extends StatelessWidget {
+class AssessmentsScreen extends StatefulWidget {
   const AssessmentsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final List<Assessment> assessments =
-        AssessmentStore.assessments;
+  State<AssessmentsScreen> createState() => _AssessmentsScreenState();
+}
 
+class _AssessmentsScreenState extends State<AssessmentsScreen> {
+  List<Assessment> _assessments = [];
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAssessments();
+  }
+
+  Future<void> _loadAssessments() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final fetched = await AssessmentService.getAssessments();
+      if (!mounted) return;
+      setState(() {
+        _assessments = fetched;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = e.toString().replaceAll('Exception: ', '');
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Assessments'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Assessment History',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            if (assessments.isEmpty)
-              const Expanded(
-                child: Center(
-                  child: Text(
-                    'No completed assessments yet.',
-                    style: TextStyle(
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              )
-            else
-              Expanded(
-                child: ListView.builder(
-                  itemCount: assessments.length,
-                  itemBuilder: (context, index) {
-                    final assessment =
-                        assessments[index];
-
-                    return Card(
-                      margin:
-                          const EdgeInsets.only(
-                        bottom: 16,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _errorMessage != null
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(_errorMessage!),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: _loadAssessments,
+                        child: const Text('RETRY'),
                       ),
-                      child: ListTile(
-                        contentPadding:
-                            const EdgeInsets.all(
-                          16.0,
+                    ],
+                  ),
+                )
+              : Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Assessment History',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
                         ),
-
-                        title: Text(
-                          assessment.studentName,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight:
-                                FontWeight.bold,
-                          ),
-                        ),
-
-                        subtitle: Padding(
-                          padding:
-                              const EdgeInsets.only(
-                            top: 8.0,
-                          ),
-                          child: Column(
-                            crossAxisAlignment:
-                                CrossAxisAlignment
-                                    .start,
-                            children: [
-                              Text(
-                                assessment
-                                    .materialTitle,
+                      ),
+                      const SizedBox(height: 20),
+                      if (_assessments.isEmpty)
+                        const Expanded(
+                          child: Center(
+                            child: Text(
+                              'No completed assessments yet.',
+                              style: TextStyle(
+                                fontSize: 16,
                               ),
+                            ),
+                          ),
+                        )
+                      else
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: _assessments.length,
+                            itemBuilder: (context, index) {
+                              final assessment = _assessments[index];
 
-                              const SizedBox(
-                                height: 4,
-                              ),
-
-                              Text(
-                                _formatDate(
-                                  assessment.date,
+                              return Card(
+                                margin: const EdgeInsets.only(
+                                  bottom: 16,
                                 ),
-                              ),
-
-                              const SizedBox(
-                                height: 8,
-                              ),
-
-                              Text(
-                                'Accuracy: '
-                                '${assessment.accuracy}%  |  '
-                                'WPM: '
-                                '${assessment.wpm.toStringAsFixed(2)}',
-                              ),
-
-                              const SizedBox(
-                                height: 4,
-                              ),
-
-                              Text(
-                                'Classification: '
-                                '${assessment.classification}',
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        trailing: const Icon(
-                          Icons.chevron_right,
-                        ),
-
-                        onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) {
-                              return AssessmentDetailsDialog(
-                                assessment:
-                                    assessment,
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.all(
+                                    16.0,
+                                  ),
+                                  title: Text(
+                                    assessment.studentName,
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  subtitle: Padding(
+                                    padding: const EdgeInsets.only(
+                                      top: 8.0,
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          assessment.materialTitle,
+                                        ),
+                                        const SizedBox(
+                                          height: 4,
+                                        ),
+                                        Text(
+                                          _formatDate(
+                                            assessment.date,
+                                          ),
+                                        ),
+                                        const SizedBox(
+                                          height: 8,
+                                        ),
+                                        Text(
+                                          'Accuracy: '
+                                          '${assessment.accuracy}%  |  '
+                                          'WPM: '
+                                          '${assessment.wpm.toStringAsFixed(2)}',
+                                        ),
+                                        const SizedBox(
+                                          height: 4,
+                                        ),
+                                        Text(
+                                          'Classification: '
+                                          '${assessment.classification}',
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  trailing: const Icon(
+                                    Icons.chevron_right,
+                                  ),
+                                  onTap: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return AssessmentDetailsDialog(
+                                          assessment: assessment,
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
                               );
                             },
-                          );
-                        },
-                      ),
-                    );
-                  },
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -149,8 +178,7 @@ class AssessmentsScreen extends StatelessWidget {
   }
 }
 
-class AssessmentDetailsDialog
-    extends StatelessWidget {
+class AssessmentDetailsDialog extends StatelessWidget {
   final Assessment assessment;
 
   const AssessmentDetailsDialog({
@@ -164,13 +192,11 @@ class AssessmentDetailsDialog
       title: const Text(
         'Assessment Details',
       ),
-
       content: SizedBox(
         width: 550,
         child: SingleChildScrollView(
           child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
@@ -180,28 +206,20 @@ class AssessmentDetailsDialog
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
               const SizedBox(height: 5),
-
               Text(
                 assessment.materialTitle,
                 style: const TextStyle(
                   fontSize: 17,
                 ),
               ),
-
               const SizedBox(height: 5),
-
               Text(
                 'Date: ${_formatDate(assessment.date)}',
               ),
-
               const SizedBox(height: 20),
-
               const Divider(),
-
               const SizedBox(height: 10),
-
               const Text(
                 'Assessment Results',
                 style: TextStyle(
@@ -209,38 +227,28 @@ class AssessmentDetailsDialog
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
               const SizedBox(height: 10),
-
               _buildResultRow(
                 'Initial Automated Accuracy',
                 '${assessment.initialAccuracy}%',
               ),
-
               _buildResultRow(
                 'Final Accuracy',
                 '${assessment.accuracy}%',
               ),
-
               _buildResultRow(
                 'Words Per Minute',
-                assessment.wpm
-                    .toStringAsFixed(2),
+                assessment.wpm.toStringAsFixed(2),
               ),
-
               _buildResultRow(
                 'Comprehension',
                 '${assessment.comprehension}%',
               ),
-
               _buildResultRow(
                 'Classification',
-                assessment.classification
-                    .toUpperCase(),
+                assessment.classification.toUpperCase(),
               ),
-
               const SizedBox(height: 15),
-
               const Text(
                 'Verification Status',
                 style: TextStyle(
@@ -248,9 +256,7 @@ class AssessmentDetailsDialog
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
               const SizedBox(height: 8),
-
               Row(
                 children: [
                   Icon(
@@ -258,9 +264,7 @@ class AssessmentDetailsDialog
                         ? Icons.verified
                         : Icons.pending,
                   ),
-
                   const SizedBox(width: 8),
-
                   Text(
                     assessment.isVerified
                         ? 'Teacher verification completed'
@@ -268,9 +272,7 @@ class AssessmentDetailsDialog
                   ),
                 ],
               ),
-
               const SizedBox(height: 20),
-
               const Text(
                 'Reading Passage',
                 style: TextStyle(
@@ -278,19 +280,15 @@ class AssessmentDetailsDialog
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
               const SizedBox(height: 8),
-
               Container(
                 width: double.infinity,
-                padding:
-                    const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   border: Border.all(
                     color: Colors.grey,
                   ),
-                  borderRadius:
-                      BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   assessment.passage,
@@ -304,7 +302,6 @@ class AssessmentDetailsDialog
           ),
         ),
       ),
-
       actions: [
         TextButton(
           onPressed: () {
@@ -321,11 +318,9 @@ class AssessmentDetailsDialog
     String value,
   ) {
     return Padding(
-      padding:
-          const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: Text(
@@ -335,9 +330,7 @@ class AssessmentDetailsDialog
               ),
             ),
           ),
-
           const SizedBox(width: 10),
-
           Text(
             value,
             style: const TextStyle(
