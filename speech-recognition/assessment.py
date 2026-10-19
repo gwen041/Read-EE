@@ -6,7 +6,12 @@ from ml.predict import predict_classification
 from accuracy import (calculate_accuracy, apply_teacher_corrections)
 
 
-def run_assessment(audio_file, expected_text, student_answers):
+def run_assessment(
+  audio_file,
+  expected_text,
+  student_answers,
+  custom_questions=None
+):
 
   student_text, word_timestamps = transcribe_audio(audio_file)
 
@@ -18,8 +23,10 @@ def run_assessment(audio_file, expected_text, student_answers):
 
   wpm_result = calculate_wpm(word_timestamps)
 
+  active_questions = custom_questions if custom_questions else questions
+
   comprehension_result = calculate_comprehension(
-    questions,
+    active_questions,
     student_answers
   )
 

@@ -19,6 +19,7 @@ if action == "assessment":
   audio_file = data["audioFile"]
   expected_text = data["expectedText"]
   student_answers = data["studentAnswers"]
+  custom_questions = data.get("questions")
 
   output = io.StringIO()
 
@@ -26,7 +27,8 @@ if action == "assessment":
     result = run_assessment(
       audio_file,
       expected_text,
-      student_answers
+      student_answers,
+      custom_questions
     )
 
   print(

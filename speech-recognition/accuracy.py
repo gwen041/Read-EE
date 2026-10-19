@@ -486,7 +486,6 @@ def apply_teacher_corrections(accuracy_result, decisions):
 
     else:
       # Teacher confirmed that this was an STT error.
-      correct += 1
       extra -= 1
 
     error_index += 1

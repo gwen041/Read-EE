@@ -26,11 +26,19 @@ def calculate_comprehension(questions, student_answers):
 
   for question, student_answer in zip(questions, student_answers):
 
-    question_type = question["type"]
+    question_type = question.get("type", "literal")
+    if question_type not in type_results:
+      question_type = "literal"
 
     type_results[question_type]["total"] += 1
 
-    if student_answer.strip().lower() == question["answer"].strip().lower():
+    expected_answer = (
+      question.get("answer")
+      or question.get("correctAnswer")
+      or ""
+    )
+
+    if student_answer.strip().lower() == expected_answer.strip().lower():
       correct += 1
       type_results[question_type]["correct"] += 1
 
@@ -58,7 +66,6 @@ def calculate_comprehension(questions, student_answers):
     "total": total,
     "score": score,
     "by_type": type_results
-
   }
 
 if __name__ == "__main__":
