@@ -143,6 +143,15 @@ class _AssessmentsScreenState extends State<AssessmentsScreen> {
                                           height: 4,
                                         ),
                                         Text(
+                                          'Reading Profile: '
+                                          '${assessment.readingProfile} '
+                                          '(Word: ${assessment.wordReadingLevel}, '
+                                          'Comp: ${assessment.comprehensionLevel})',
+                                        ),
+                                        const SizedBox(
+                                          height: 4,
+                                        ),
+                                        Text(
                                           'Classification: '
                                           '${assessment.classification}',
                                         ),
@@ -245,8 +254,36 @@ class AssessmentDetailsDialog extends StatelessWidget {
                 '${assessment.comprehension}%',
               ),
               _buildResultRow(
+                'Word Reading Level',
+                assessment.wordReadingLevel,
+              ),
+              _buildResultRow(
+                'Comprehension Level',
+                assessment.comprehensionLevel,
+              ),
+              _buildResultRow(
+                'Reading Profile (Phil-IRI)',
+                assessment.readingProfile.toUpperCase(),
+              ),
+              _buildResultRow(
                 'Classification',
                 assessment.classification.toUpperCase(),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blueGrey.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  assessment.readingProfileExplanation,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    height: 1.4,
+                  ),
+                ),
               ),
               const SizedBox(height: 15),
               const Text(

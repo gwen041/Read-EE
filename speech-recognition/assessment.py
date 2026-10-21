@@ -4,6 +4,7 @@ from comprehension import calculate_comprehension
 from quiz_data import questions
 from ml.predict import predict_classification
 from accuracy import (calculate_accuracy, apply_teacher_corrections)
+from reading_profile import calculate_reading_profile
 
 
 def run_assessment(
@@ -36,11 +37,17 @@ def run_assessment(
     comprehension_result["score"]
   )
 
+  profile_result = calculate_reading_profile(
+    accuracy_result["accuracy"],
+    comprehension_result["score"]
+  )
+
   return {
     "accuracy": accuracy_result,
     "wpm": wpm_result,
     "comprehension": comprehension_result,
-    "classification": prediction
+    "classification": prediction,
+    "reading_profile": profile_result
   }
 
 def finalize_assessment(
@@ -61,11 +68,17 @@ def finalize_assessment(
     comprehension_result["score"]
   )
 
+  profile_result = calculate_reading_profile(
+    corrected_accuracy["accuracy"],
+    comprehension_result["score"]
+  )
+
   return {
     "accuracy": corrected_accuracy,
     "wpm": wpm_result,
     "comprehension": comprehension_result,
-    "classification": prediction
+    "classification": prediction,
+    "reading_profile": profile_result
   }
 
 
@@ -107,6 +120,9 @@ if __name__ == "__main__":
   print("\nML Classification:")
   print(result["classification"])
 
+  print("\nReading Profile:")
+  print(result["reading_profile"])
+
   test_decisions = {
     "0": True,
     "1": False
@@ -126,3 +142,6 @@ if __name__ == "__main__":
 
   print("\nFinal Classification:")
   print(final_result["classification"])
+
+  print("\nFinal Reading Profile:")
+  print(final_result["reading_profile"])

@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../models/assessment.dart';
@@ -51,6 +53,12 @@ class _ResultsScreenState extends State<ResultsScreen> {
   }
 
   Future<void> submitAssessment() async {
+    if (!mounted) return;
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
     try {
       final studentAnswers = convertAnswersToLetters();
 
@@ -100,6 +108,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
         ...accuracy,
         'initialAccuracy': initialAccuracyValue,
         'isVerified': isFinalized,
+        if (result!['reading_profile'] != null)
+          'reading_profile': result!['reading_profile'],
       };
 
       if (_savedAssessmentId == null) {
@@ -404,6 +414,78 @@ class _ResultsScreenState extends State<ResultsScreen> {
     );
   }
 
+  Widget buildReadingProfileSection({
+    Map<String, dynamic>? profileData,
+    required double accuracyScore,
+    required double comprehensionScore,
+  }) {
+    final wordLevel = profileData?['word_reading_level']?.toString() ??
+        Assessment.getWordReadingLevel(accuracyScore);
+    final compLevel = profileData?['comprehension_level']?.toString() ??
+        Assessment.getComprehensionLevel(comprehensionScore);
+    final overallProfile = profileData?['reading_profile']?.toString() ??
+        Assessment.getReadingProfile(accuracyScore, comprehensionScore);
+    final explanation = profileData?['explanation']?.toString() ??
+        Assessment.getProfileExplanation(accuracyScore, comprehensionScore);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 12),
+        const Text(
+          'Oral Reading Profile (Phil-IRI)',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        buildResultCard(
+          title: 'Word Reading Level',
+          value: wordLevel,
+        ),
+        buildResultCard(
+          title: 'Comprehension Level',
+          value: compLevel,
+        ),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SizedBox(
+              width: double.infinity,
+              child: Column(
+                children: [
+                  const Text(
+                    'Reading Profile',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    overallProfile.toUpperCase(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    explanation,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget buildInitialAssessmentCard() {
     if (initialResult == null) {
       return const SizedBox.shrink();
@@ -420,6 +502,15 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
     final initialClassification =
         initialResult!['classification'];
+
+    final initialProfile = initialResult!['reading_profile'] != null
+        ? Map<String, dynamic>.from(initialResult!['reading_profile'])
+        : null;
+
+    final accuracyScore =
+        (initialAccuracy['accuracy'] as num).toDouble();
+    final comprehensionScore =
+        (initialComprehension['score'] as num).toDouble();
 
     return Card(
       child: Padding(
@@ -461,6 +552,12 @@ class _ResultsScreenState extends State<ResultsScreen> {
               title: 'Comprehension Score',
               value:
                   '${initialComprehension['score']}%',
+            ),
+
+            buildReadingProfileSection(
+              profileData: initialProfile,
+              accuracyScore: accuracyScore,
+              comprehensionScore: comprehensionScore,
             ),
 
             const SizedBox(height: 8),
@@ -507,6 +604,14 @@ class _ResultsScreenState extends State<ResultsScreen> {
     Map<String, dynamic> comprehension,
     dynamic classification,
   ) {
+    final profileData = result?['reading_profile'] != null
+        ? Map<String, dynamic>.from(result!['reading_profile'])
+        : null;
+    final accuracyScore =
+        (accuracy['accuracy'] as num).toDouble();
+    final comprehensionScore =
+        (comprehension['score'] as num).toDouble();
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -551,6 +656,12 @@ class _ResultsScreenState extends State<ResultsScreen> {
               title: 'Comprehension Score',
               value:
                   '${comprehension['score']}%',
+            ),
+
+            buildReadingProfileSection(
+              profileData: profileData,
+              accuracyScore: accuracyScore,
+              comprehensionScore: comprehensionScore,
             ),
 
             const SizedBox(height: 8),
@@ -614,11 +725,32 @@ class _ResultsScreenState extends State<ResultsScreen> {
         ),
         body: Center(
           child: Padding(
-            padding:
-                const EdgeInsets.all(24.0),
-            child: Text(
-              errorMessage!,
-              textAlign: TextAlign.center,
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: Colors.red,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  errorMessage!.replaceAll('Exception: ', ''),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    onPressed: isLoading ? null : submitAssessment,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('RETRY SUBMISSION'),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -872,6 +1004,15 @@ class _ResultsScreenState extends State<ResultsScreen> {
               child: ElevatedButton(
                 onPressed: () {
                   saveAssessment();
+
+                  if (!kIsWeb) {
+                    try {
+                      final tempFile = File(widget.audioPath);
+                      if (tempFile.existsSync()) {
+                        tempFile.deleteSync();
+                      }
+                    } catch (_) {}
+                  }
 
                   Navigator.popUntil(
                     context,

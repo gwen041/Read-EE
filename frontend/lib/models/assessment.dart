@@ -27,6 +27,93 @@ class Assessment {
     required this.isVerified,
   });
 
+  static String getWordReadingLevel(double wordReadingScore) {
+    final rounded = wordReadingScore.round();
+    if (rounded >= 97) return 'Independent';
+    if (rounded >= 90) return 'Instructional';
+    return 'Frustration';
+  }
+
+  static String getComprehensionLevel(double comprehensionScore) {
+    final rounded = comprehensionScore.round();
+    if (rounded >= 80) return 'Independent';
+    if (rounded >= 59) return 'Instructional';
+    return 'Frustration';
+  }
+
+  static String getReadingProfile(
+    double wordReadingScore,
+    double comprehensionScore,
+  ) {
+    final wordLevel = getWordReadingLevel(wordReadingScore);
+    final compLevel = getComprehensionLevel(comprehensionScore);
+
+    if (wordLevel == 'Independent' && compLevel == 'Independent') {
+      return 'Independent';
+    }
+    if (wordLevel == 'Frustration' || compLevel == 'Frustration') {
+      return 'Frustration';
+    }
+    return 'Instructional';
+  }
+
+  static String getProfileExplanation(
+    double wordReadingScore,
+    double comprehensionScore,
+  ) {
+    final wordLevel = getWordReadingLevel(wordReadingScore);
+    final compLevel = getComprehensionLevel(comprehensionScore);
+    final profile = getReadingProfile(wordReadingScore, comprehensionScore);
+
+    String wordReason;
+    if (wordLevel == 'Independent') {
+      wordReason =
+          'Word Reading is Independent ($wordReadingScore% is within 97%-100%)';
+    } else if (wordLevel == 'Instructional') {
+      wordReason =
+          'Word Reading is Instructional ($wordReadingScore% is within 90%-96%)';
+    } else {
+      wordReason =
+          'Word Reading is Frustration ($wordReadingScore% is 89% or below)';
+    }
+
+    String compReason;
+    if (compLevel == 'Independent') {
+      compReason =
+          'Comprehension is Independent ($comprehensionScore% is within 80%-100%)';
+    } else if (compLevel == 'Instructional') {
+      compReason =
+          'Comprehension is Instructional ($comprehensionScore% is within 59%-79%)';
+    } else {
+      compReason =
+          'Comprehension is Frustration ($comprehensionScore% is 58% or below)';
+    }
+
+    String meaning;
+    if (profile == 'Independent') {
+      meaning =
+          'Because both areas are Independent, the learner can read and '
+          'understand this passage on their own without teacher assistance.';
+    } else if (profile == 'Instructional') {
+      meaning =
+          'Based on Phil-IRI guidelines, the learner is at the Instructional '
+          'level and can read and learn from this passage with teacher support.';
+    } else {
+      meaning =
+          'Based on Phil-IRI guidelines, when either area is at the Frustration '
+          'level, the overall profile is Frustration. This passage is currently '
+          'too difficult for the learner and requires reading intervention.';
+    }
+
+    return '$wordReason and $compReason. $meaning';
+  }
+
+  String get wordReadingLevel => getWordReadingLevel(accuracy);
+  String get comprehensionLevel => getComprehensionLevel(comprehension);
+  String get readingProfile => getReadingProfile(accuracy, comprehension);
+  String get readingProfileExplanation =>
+      getProfileExplanation(accuracy, comprehension);
+
   factory Assessment.fromJson(Map<String, dynamic> json) {
     final student = json['student'] as Map<String, dynamic>?;
     final material = json['readingMaterial'] as Map<String, dynamic>?;
