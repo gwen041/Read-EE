@@ -1,4 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../models/reading_material.dart';
 import 'quiz_screen.dart';
@@ -74,14 +75,25 @@ class _RecordingReviewScreenState
   }
 
   Future<void> playRecording() async {
-    await audioPlayer.play(
-      UrlSource(widget.audioPath),
-    );
+    try {
+      await audioPlayer.play(
+        kIsWeb
+            ? UrlSource(widget.audioPath)
+            : DeviceFileSource(widget.audioPath),
+      );
 
-    if (mounted) {
-      setState(() {
-        isPlaying = true;
-      });
+      if (mounted) {
+        setState(() {
+          isPlaying = true;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not play recording: $e'),
+        ),
+      );
     }
   }
 
@@ -149,7 +161,6 @@ class _RecordingReviewScreenState
               style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 25),
-
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20.0),
@@ -164,7 +175,6 @@ class _RecordingReviewScreenState
                     size: 50,
                   ),
                   const SizedBox(height: 15),
-
                   Text(
                     isPlaying
                         ? 'Playing recording...'
@@ -174,9 +184,7 @@ class _RecordingReviewScreenState
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
                   const SizedBox(height: 20),
-
                   Slider(
                     min: 0,
                     max: duration.inMilliseconds > 0
@@ -185,14 +193,15 @@ class _RecordingReviewScreenState
                     value: position.inMilliseconds
                         .clamp(
                           0,
-                          duration.inMilliseconds,
+                          duration.inMilliseconds > 0
+                              ? duration.inMilliseconds
+                              : 1,
                         )
                         .toDouble(),
                     onChanged: duration == Duration.zero
                         ? null
                         : (value) async {
-                            final newPosition =
-                                Duration(
+                            final newPosition = Duration(
                               milliseconds: value.toInt(),
                             );
 
@@ -201,7 +210,6 @@ class _RecordingReviewScreenState
                             );
                           },
                   ),
-
                   Row(
                     mainAxisAlignment:
                         MainAxisAlignment.spaceBetween,
@@ -210,9 +218,7 @@ class _RecordingReviewScreenState
                       Text(formatDuration(duration)),
                     ],
                   ),
-
                   const SizedBox(height: 15),
-
                   Row(
                     mainAxisAlignment:
                         MainAxisAlignment.center,
@@ -239,13 +245,16 @@ class _RecordingReviewScreenState
                 ],
               ),
             ),
-
             const Spacer(),
-
             SizedBox(
               width: double.infinity,
+              height: 48,
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
+                  if (isPlaying) {
+                    await stopRecordingPlayback();
+                  }
+                  if (!context.mounted) return;
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -264,13 +273,16 @@ class _RecordingReviewScreenState
                 child: const Text('CONTINUE TO QUIZ'),
               ),
             ),
-
             const SizedBox(height: 10),
-
             SizedBox(
               width: double.infinity,
+              height: 48,
               child: OutlinedButton(
-                onPressed: () {
+                onPressed: () async {
+                  if (isPlaying) {
+                    await stopRecordingPlayback();
+                  }
+                  if (!context.mounted) return;
                   Navigator.pop(context);
                 },
                 child: const Text('RECORD AGAIN'),
