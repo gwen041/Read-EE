@@ -21,7 +21,7 @@ def get_comprehension_level(comprehension_score):
 
 
 def get_reading_profile(word_reading_level, comprehension_level):
-  # Table 8: Student's Reading Profile Per Passage
+  # Phil-IRI Manual 2018 - Table 8 (Student's Reading Profile Per Passage)
   if (
     word_reading_level == "Independent"
     and comprehension_level == "Independent"
@@ -37,45 +37,33 @@ def get_reading_profile(word_reading_level, comprehension_level):
   return "Instructional"
 
 
-def get_profile_explanation(
-  word_reading_score,
-  comprehension_score,
-  word_level,
-  comprehension_level,
-  reading_profile
-):
-  if word_level == "Independent":
-    word_reason = f"Word Reading is Independent ({word_reading_score}% is within 97%-100%)"
-  elif word_level == "Instructional":
-    word_reason = f"Word Reading is Instructional ({word_reading_score}% is within 90%-96%)"
-  else:
-    word_reason = f"Word Reading is Frustration ({word_reading_score}% is 89% or below)"
-
-  if comprehension_level == "Independent":
-    comp_reason = f"Comprehension is Independent ({comprehension_score}% is within 80%-100%)"
-  elif comprehension_level == "Instructional":
-    comp_reason = f"Comprehension is Instructional ({comprehension_score}% is within 59%-79%)"
-  else:
-    comp_reason = f"Comprehension is Frustration ({comprehension_score}% is 58% or below)"
-
+def get_profile_explanation(word_level, comprehension_level, reading_profile):
   if reading_profile == "Independent":
-    meaning = (
-      "Because both areas are Independent, the learner can read and "
-      "understand this passage on their own without teacher assistance."
+    return (
+      "The student can read and understand this passage easily and "
+      "confidently on their own, without needing assistance."
     )
   elif reading_profile == "Instructional":
-    meaning = (
-      "Based on Phil-IRI guidelines, the learner is at the Instructional "
-      "level and can read and learn from this passage with teacher support."
+    return (
+      "The student is making good progress. They can read and understand "
+      "this passage well with a little guidance and support from the teacher."
     )
   else:
-    meaning = (
-      "Based on Phil-IRI guidelines, when either area is at the Frustration "
-      "level, the overall profile is Frustration. This passage is currently "
-      "too difficult for the learner and requires reading intervention."
-    )
-
-  return f"{word_reason} and {comp_reason}. {meaning}"
+    if word_level == "Frustration" and comprehension_level == "Frustration":
+      return (
+        "This passage is currently too challenging for the student in both "
+        "word reading and understanding. Practicing with simpler stories will help them build confidence."
+      )
+    elif word_level == "Frustration":
+      return (
+        "The student understands the story, but had difficulty reading several words in this passage. "
+        "They will benefit from practicing word recognition and sounds with easier materials."
+      )
+    else:
+      return (
+        "The student was able to read the words, but found it difficult to understand the passage. "
+        "They will benefit from guided questions and vocabulary support."
+      )
 
 
 def calculate_reading_profile(word_reading_score, comprehension_score):
@@ -83,8 +71,6 @@ def calculate_reading_profile(word_reading_score, comprehension_score):
   comprehension_level = get_comprehension_level(comprehension_score)
   reading_profile = get_reading_profile(word_level, comprehension_level)
   explanation = get_profile_explanation(
-    word_reading_score,
-    comprehension_score,
     word_level,
     comprehension_level,
     reading_profile

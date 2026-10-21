@@ -7,6 +7,32 @@ from accuracy import (calculate_accuracy, apply_teacher_corrections)
 from reading_profile import calculate_reading_profile
 
 
+def get_classification_explanation(classification):
+  key = str(classification).lower().strip()
+  if key == "normal":
+    return (
+      "The student has well-balanced reading skills. They read the words accurately, "
+      "maintain a natural pace, and understand what they read."
+    )
+  elif key == "decoding":
+    return (
+      "The student understands the story well, but struggles to recognize or pronounce "
+      "some words correctly. Practicing phonics and sight words will help."
+    )
+  elif key == "fluency":
+    return (
+      "The student reads words accurately and understands the story, but reads at a slower pace. "
+      "Practicing reading aloud will help them read more smoothly and effortlessly."
+    )
+  elif key == "comprehension":
+    return (
+      "The student can read the words smoothly and accurately, but has difficulty understanding "
+      "or remembering key details. Discussing the story before and after reading will help."
+    )
+  else:
+    return "The student completed the reading assessment."
+
+
 def run_assessment(
   audio_file,
   expected_text,
@@ -47,8 +73,10 @@ def run_assessment(
     "wpm": wpm_result,
     "comprehension": comprehension_result,
     "classification": prediction,
+    "classification_explanation": get_classification_explanation(prediction),
     "reading_profile": profile_result
   }
+
 
 def finalize_assessment(
   accuracy_result,
@@ -78,6 +106,7 @@ def finalize_assessment(
     "wpm": wpm_result,
     "comprehension": comprehension_result,
     "classification": prediction,
+    "classification_explanation": get_classification_explanation(prediction),
     "reading_profile": profile_result
   }
 
@@ -119,6 +148,7 @@ if __name__ == "__main__":
 
   print("\nML Classification:")
   print(result["classification"])
+  print(f"Explanation: {result['classification_explanation']}")
 
   print("\nReading Profile:")
   print(result["reading_profile"])
@@ -142,6 +172,7 @@ if __name__ == "__main__":
 
   print("\nFinal Classification:")
   print(final_result["classification"])
+  print(f"Explanation: {final_result['classification_explanation']}")
 
   print("\nFinal Reading Profile:")
   print(final_result["reading_profile"])
