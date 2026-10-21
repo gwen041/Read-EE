@@ -1,4 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class ReadingVerificationScreen extends StatefulWidget {
@@ -120,6 +121,38 @@ class _ReadingVerificationScreenState
     return decisions.length == totalErrors;
   }
 
+  /// Marks every flagged item as "Student read correctly / Ignore STT noise"
+  void markAllStudentCorrect() {
+    setState(() {
+      int idx = 0;
+      for (int i = 0; i < mismatches.length; i++) {
+        decisions[idx++] = true; // true = student said expected word
+      }
+      for (int i = 0; i < missingWords.length; i++) {
+        decisions[idx++] = false; // false = word was NOT missing
+      }
+      for (int i = 0; i < extraWords.length; i++) {
+        decisions[idx++] = false; // false = ignore extra word / STT noise
+      }
+    });
+  }
+
+  /// Marks every flagged item as a confirmed reading error
+  void keepAllDetectedErrors() {
+    setState(() {
+      int idx = 0;
+      for (int i = 0; i < mismatches.length; i++) {
+        decisions[idx++] = false; // false = keep mismatch error
+      }
+      for (int i = 0; i < missingWords.length; i++) {
+        decisions[idx++] = true; // true = keep missing error
+      }
+      for (int i = 0; i < extraWords.length; i++) {
+        decisions[idx++] = true; // true = keep extra word error
+      }
+    });
+  }
+
   Future<void> playSection(
     int index,
     Map<String, dynamic> error,
@@ -144,22 +177,13 @@ class _ReadingVerificationScreenState
 
     await audioPlayer.stop();
 
-    /*
-     * Give the teacher more context:
-     *
-     * 1 second before the flagged word
-     * +
-     * the flagged word
-     * +
-     * 1 second after the flagged word
-     */
     final startSeconds =
-        (start - 1.0).clamp(
+        (start - 0.8).clamp(
       0.0,
       double.infinity,
     );
 
-    final endSeconds = end + 1.0;
+    final endSeconds = end + 0.8;
 
     final startPosition = Duration(
       milliseconds:
@@ -177,11 +201,14 @@ class _ReadingVerificationScreenState
       stopAtPosition = endPosition;
     });
 
-    await audioPlayer.play(
-      UrlSource(widget.audioPath),
-    );
+    final source = kIsWeb
+        ? UrlSource(widget.audioPath)
+        : DeviceFileSource(widget.audioPath);
 
-    await audioPlayer.seek(startPosition);
+    await audioPlayer.play(
+      source,
+      position: startPosition,
+    );
   }
 
   Future<void> stopSection() async {
@@ -198,9 +225,9 @@ class _ReadingVerificationScreenState
   void confirmReview() {
     if (!allReviewed) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Please review all detected reading differences.',
+            'Please review all $totalErrors items (${decisions.length}/$totalErrors selected), or use the quick buttons above.',
           ),
         ),
       );
@@ -236,43 +263,51 @@ class _ReadingVerificationScreenState
             Text(
               widget.studentName,
               style: const TextStyle(
-                fontSize: 24,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
             ),
 
-            const SizedBox(height: 5),
+            const SizedBox(height: 4),
 
             Text(
               widget.materialTitle,
-              style: const TextStyle(
-                fontSize: 18,
-              ),
-            ),
-
-            const SizedBox(height: 25),
-
-            const Text(
-              'Reading Verification',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            Text(
-              totalErrors == 1
-                  ? 'The system detected 1 possible reading error.'
-                  : 'The system detected $totalErrors '
-                      'possible reading errors.',
               style: const TextStyle(
                 fontSize: 16,
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
+
+            Text(
+              totalErrors == 1
+                  ? 'The system detected 1 possible reading error (${decisions.length}/1 reviewed).'
+                  : 'The system detected $totalErrors possible reading errors (${decisions.length}/$totalErrors reviewed).',
+              style: const TextStyle(
+                fontSize: 15,
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: markAllStudentCorrect,
+                  icon: const Icon(Icons.check_circle_outline, size: 18),
+                  label: const Text('Mark All as Read Correctly'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: keepAllDetectedErrors,
+                  icon: const Icon(Icons.error_outline, size: 18),
+                  label: const Text('Keep All as Errors'),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
 
             Expanded(
               child: ListView(
@@ -310,10 +345,11 @@ class _ReadingVerificationScreenState
               ),
             ),
 
-            const SizedBox(height: 15),
+            const SizedBox(height: 12),
 
             SizedBox(
               width: double.infinity,
+              height: 48,
               child: ElevatedButton(
                 onPressed: confirmReview,
                 child: const Text(
@@ -357,24 +393,24 @@ class _ReadingVerificationScreenState
               CrossAxisAlignment.start,
           children: [
             const Text(
-              'Possible reading difference',
+              'Possible misread word',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
               ),
             ),
 
-            const SizedBox(height: 15),
+            const SizedBox(height: 10),
 
             Text(
-              'Expected: $expected',
+              'Expected in passage: "$expected"',
               style: const TextStyle(
                 fontSize: 16,
               ),
             ),
 
             Text(
-              'Detected: $detected',
+              'Heard by system: "$detected"',
               style: const TextStyle(
                 fontSize: 16,
               ),
@@ -392,34 +428,35 @@ class _ReadingVerificationScreenState
                         '${formatTimestamp(start)} – '
                         '${formatTimestamp(end)}',
                 style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
                 ),
               ),
 
-            const SizedBox(height: 15),
+            const SizedBox(height: 12),
 
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed:
+            if (start != null && end != null)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed:
+                      playingIndex == index
+                          ? stopSection
+                          : () => playSection(
+                                index,
+                                item,
+                              ),
+                  icon: Icon(
                     playingIndex == index
-                        ? stopSection
-                        : () => playSection(
-                              index,
-                              item,
-                            ),
-                icon: Icon(
-                  playingIndex == index
-                      ? Icons.stop
-                      : Icons.play_arrow,
-                ),
-                label: Text(
-                  playingIndex == index
-                      ? 'STOP SECTION'
-                      : 'PLAY THIS SECTION',
+                        ? Icons.stop
+                        : Icons.play_arrow,
+                  ),
+                  label: Text(
+                    playingIndex == index
+                        ? 'STOP SECTION'
+                        : 'PLAY THIS SECTION',
+                  ),
                 ),
               ),
-            ),
 
             const SizedBox(height: 10),
 
@@ -436,13 +473,13 @@ class _ReadingVerificationScreenState
                   RadioListTile<bool>(
                     value: true,
                     title: Text(
-                      'Student actually said "$expected"',
+                      'Student read "$expected" correctly',
                     ),
                   ),
                   RadioListTile<bool>(
                     value: false,
                     title: Text(
-                      'Student actually said "$detected"',
+                      'Student actually said the word "$detected"',
                     ),
                   ),
                 ],
@@ -471,7 +508,7 @@ class _ReadingVerificationScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Missing word',
+              'Possible skipped word',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
@@ -479,8 +516,8 @@ class _ReadingVerificationScreenState
             ),
             const SizedBox(height: 10),
             Text(
-              word,
-              style: const TextStyle(fontSize: 18),
+              'Passage word: "$word"',
+              style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 10),
             if (start != null && end != null)
@@ -488,9 +525,9 @@ class _ReadingVerificationScreenState
                 timestampType == 'surrounding'
                     ? 'Around: ${formatTimestamp(start)} – ${formatTimestamp(end)}'
                     : 'Time: ${formatTimestamp(start)} – ${formatTimestamp(end)}',
-                style: const TextStyle(fontSize: 16),
+                style: const TextStyle(fontSize: 15),
               ),
-            const SizedBox(height: 15),
+            const SizedBox(height: 12),
             if (start != null && end != null)
               SizedBox(
                 width: double.infinity,
@@ -519,12 +556,12 @@ class _ReadingVerificationScreenState
               child: Column(
                 children: [
                   RadioListTile<bool>(
-                    value: true,
-                    title: Text('The word "$word" is missing'),
+                    value: false,
+                    title: Text('Student actually said "$word"'),
                   ),
                   RadioListTile<bool>(
-                    value: false,
-                    title: Text('The word "$word" is not missing'),
+                    value: true,
+                    title: Text('Count "$word" as skipped/missing'),
                   ),
                 ],
               ),
@@ -552,7 +589,7 @@ class _ReadingVerificationScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Extra word',
+              'Possible extra word spoken',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
@@ -560,8 +597,8 @@ class _ReadingVerificationScreenState
             ),
             const SizedBox(height: 10),
             Text(
-              word,
-              style: const TextStyle(fontSize: 18),
+              'Heard by system: "$word"',
+              style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 10),
             if (start != null && end != null)
@@ -569,9 +606,9 @@ class _ReadingVerificationScreenState
                 timestampType == 'surrounding'
                     ? 'Around: ${formatTimestamp(start)} – ${formatTimestamp(end)}'
                     : 'Time: ${formatTimestamp(start)} – ${formatTimestamp(end)}',
-                style: const TextStyle(fontSize: 16),
+                style: const TextStyle(fontSize: 15),
               ),
-            const SizedBox(height: 15),
+            const SizedBox(height: 12),
             if (start != null && end != null)
               SizedBox(
                 width: double.infinity,
@@ -600,12 +637,12 @@ class _ReadingVerificationScreenState
               child: Column(
                 children: [
                   RadioListTile<bool>(
-                    value: true,
-                    title: Text('Student added the extra word "$word"'),
+                    value: false,
+                    title: Text('Ignore "$word" (noise or part of passage)'),
                   ),
                   RadioListTile<bool>(
-                    value: false,
-                    title: Text('Student did not say "$word"'),
+                    value: true,
+                    title: Text('Count "$word" as an inserted extra word'),
                   ),
                 ],
               ),

@@ -13,7 +13,9 @@ def transcribe_audio(audio_path):
     beam_size=5,
     temperature=0,
     condition_on_previous_text=False,
-    word_timestamps=True
+    word_timestamps=True,
+    vad_filter=True,
+    vad_parameters=dict(min_silence_duration_ms=300)
   )
 
   student_words = []
@@ -30,16 +32,20 @@ def transcribe_audio(audio_path):
 
     if segment.words:
       for word in segment.words:
+        cleaned = word.word.strip()
+        if not cleaned:
+          continue
+
         print(
           f"    {word.start:.2f}s - {word.end:.2f}s : {word.word}"
         )
 
-        student_words.append(word.word.strip())
+        student_words.append(cleaned)
 
         word_timestamps.append({
-          'word': word.word.strip(),
-          'start': word.start,
-          'end': word.end
+          'word': cleaned,
+          'start': float(word.start),
+          'end': float(word.end)
         })
 
   student_text = " ".join(student_words)
