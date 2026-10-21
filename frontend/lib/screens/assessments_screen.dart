@@ -269,16 +269,16 @@ class AssessmentDetailsDialog extends StatelessWidget {
                 'Classification',
                 assessment.classification.toUpperCase(),
               ),
-              const SizedBox(height: 8),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 15),
                 decoration: BoxDecoration(
                   color: Colors.blueGrey.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  assessment.readingProfileExplanation,
+                  assessment.classificationExplanation,
                   style: const TextStyle(
                     fontSize: 14,
                     height: 1.4,

@@ -65,47 +65,34 @@ class Assessment {
     final compLevel = getComprehensionLevel(comprehensionScore);
     final profile = getReadingProfile(wordReadingScore, comprehensionScore);
 
-    String wordReason;
-    if (wordLevel == 'Independent') {
-      wordReason =
-          'Word Reading is Independent ($wordReadingScore% is within 97%-100%)';
-    } else if (wordLevel == 'Instructional') {
-      wordReason =
-          'Word Reading is Instructional ($wordReadingScore% is within 90%-96%)';
-    } else {
-      wordReason =
-          'Word Reading is Frustration ($wordReadingScore% is 89% or below)';
-    }
-
-    String compReason;
-    if (compLevel == 'Independent') {
-      compReason =
-          'Comprehension is Independent ($comprehensionScore% is within 80%-100%)';
-    } else if (compLevel == 'Instructional') {
-      compReason =
-          'Comprehension is Instructional ($comprehensionScore% is within 59%-79%)';
-    } else {
-      compReason =
-          'Comprehension is Frustration ($comprehensionScore% is 58% or below)';
-    }
-
-    String meaning;
     if (profile == 'Independent') {
-      meaning =
-          'Because both areas are Independent, the learner can read and '
-          'understand this passage on their own without teacher assistance.';
+      return 'The student can read and understand this passage easily and confidently on their own, without needing assistance.';
     } else if (profile == 'Instructional') {
-      meaning =
-          'Based on Phil-IRI guidelines, the learner is at the Instructional '
-          'level and can read and learn from this passage with teacher support.';
+      return 'The student is making good progress. They can read and understand this passage well with a little guidance and support from the teacher.';
     } else {
-      meaning =
-          'Based on Phil-IRI guidelines, when either area is at the Frustration '
-          'level, the overall profile is Frustration. This passage is currently '
-          'too difficult for the learner and requires reading intervention.';
+      if (wordLevel == 'Frustration' && compLevel == 'Frustration') {
+        return 'This passage is currently too challenging for the student in both word reading and understanding. Practicing with simpler stories will help them build confidence.';
+      } else if (wordLevel == 'Frustration') {
+        return 'The student understands the story, but had difficulty reading several words in this passage. They will benefit from practicing word recognition and sounds with easier materials.';
+      } else {
+        return 'The student was able to read the words, but found it difficult to understand the passage. They will benefit from guided questions and vocabulary support.';
+      }
     }
+  }
 
-    return '$wordReason and $compReason. $meaning';
+  static String getClassificationExplanation(String classification) {
+    switch (classification.toLowerCase().trim()) {
+      case 'normal':
+        return 'The student has well-balanced reading skills. They read the words accurately, maintain a natural pace, and understand what they read.';
+      case 'decoding':
+        return 'The student understands the story well, but struggles to recognize or pronounce some words correctly. Practicing phonics and sight words will help.';
+      case 'fluency':
+        return 'The student reads words accurately and understands the story, but reads at a slower pace. Practicing reading aloud will help them read more smoothly and effortlessly.';
+      case 'comprehension':
+        return 'The student can read the words smoothly and accurately, but has difficulty understanding or remembering key details. Discussing the story before and after reading will help.';
+      default:
+        return 'The student completed the reading assessment.';
+    }
   }
 
   String get wordReadingLevel => getWordReadingLevel(accuracy);
@@ -113,6 +100,8 @@ class Assessment {
   String get readingProfile => getReadingProfile(accuracy, comprehension);
   String get readingProfileExplanation =>
       getProfileExplanation(accuracy, comprehension);
+  String get classificationExplanation =>
+      getClassificationExplanation(classification);
 
   factory Assessment.fromJson(Map<String, dynamic> json) {
     final student = json['student'] as Map<String, dynamic>?;
