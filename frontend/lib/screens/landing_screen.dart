@@ -1,20 +1,193 @@
-
 import 'package:flutter/material.dart';
-
 import 'login_screen.dart';
+import 'register_screen.dart';
 
 class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});
 
-  static const Color primaryColor = Color(0xFF2457A7);
-  static const Color backgroundColor = Color(0xFFF5F8FF);
-  static const Color accentColor = Color(0xFFE6EEFF);
+  static const Color primaryColor = Color(0xFFF5BE41);
+  static const Color textPrimary = Color(0xFF1E293B);
+  static const Color textSecondary = Color(0xFF64748B);
+  static const Color backgroundColor = Color(0xFFFAF9F5);
+  static const Color accentColor = Color(0xFFFEF3C7);
+
+  void openRegister(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const RegisterScreen(),
+      ),
+    );
+  }
 
   void openLogin(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => const LoginScreen(),
+      ),
+    );
+  }
+
+  void _showHowItWorksModal(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: accentColor,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.auto_stories_rounded,
+                  color: textPrimary,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'How READ-EE Works',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: SizedBox(
+            width: 520,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildModalStep(
+                    number: '1',
+                    icon: Icons.mic_rounded,
+                    title: '1. Oral Reading Aloud',
+                    description:
+                        'The student reads an assigned reading passage aloud into the app.',
+                  ),
+                  const SizedBox(height: 12),
+                  _buildModalStep(
+                    number: '2',
+                    icon: Icons.graphic_eq_rounded,
+                    title: '2. Speech Recognition & Fluency',
+                    description:
+                        'Whisper speech recognition evaluates word-by-word reading accuracy and reading speed (WPM) with background noise filtering.',
+                  ),
+                  const SizedBox(height: 12),
+                  _buildModalStep(
+                    number: '3',
+                    icon: Icons.quiz_outlined,
+                    title: '3. Comprehension Assessment',
+                    description:
+                        'The student answers multiple-choice comprehension questions to measure text understanding.',
+                  ),
+                  const SizedBox(height: 12),
+                  _buildModalStep(
+                    number: '4',
+                    icon: Icons.psychology_rounded,
+                    title: '4. Difficulty Classification & Reading Profile',
+                    description:
+                        'The system classifies the student\'s reading difficulty (Decoding, Fluency, Comprehension, or Normal) and determines their official Reading Profile (Independent, Instructional, or Frustration).',
+                  ),
+                  const SizedBox(height: 12),
+                  _buildModalStep(
+                    number: '5',
+                    icon: Icons.verified_user_outlined,
+                    title: '5. Teacher Verification & Recording',
+                    description:
+                        'The teacher reviews flagged reading differences and verifies the final results, updating the student\'s persistent record.',
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  foregroundColor: textPrimary,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text('GOT IT'),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  static Widget _buildModalStep({
+    required String number,
+    required IconData icon,
+    required String title,
+    required String description,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: primaryColor.withValues(alpha: 0.22),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 20, color: textPrimary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    height: 1.45,
+                    color: textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -30,18 +203,26 @@ class LandingScreen extends StatelessWidget {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.menu_book_rounded,
-              color: primaryColor,
-              size: 32,
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: accentColor,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.menu_book_rounded,
+                color: textPrimary,
+                size: 24,
+              ),
             ),
             const SizedBox(width: 10),
             const Text(
               'READ-EE',
               style: TextStyle(
-                color: primaryColor,
+                color: textPrimary,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.2,
+                fontSize: 20,
               ),
             ),
           ],
@@ -52,617 +233,143 @@ class LandingScreen extends StatelessWidget {
             child: const Text(
               'Teacher Login',
               style: TextStyle(
-                color: primaryColor,
-                fontWeight: FontWeight.w600,
+                color: textPrimary,
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
               ),
             ),
           ),
           const SizedBox(width: 16),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildHero(context),
-            _buildFeatures(),
-            _buildHowItWorks(),
-            _buildCallToAction(context),
-            _buildFooter(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHero(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 24,
-        vertical: 45,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            maxWidth: 1100,
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 40,
           ),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final isWide = constraints.maxWidth > 700;
-
-              final introduction = Column(
-                crossAxisAlignment: isWide
-                    ? CrossAxisAlignment.start
-                    : CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: accentColor,
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: const Text(
-                      'A SMARTER WAY TO ASSESS READING',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: primaryColor,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
-                      ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: 720,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: accentColor,
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(
+                      color: primaryColor.withValues(alpha: 0.6),
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Helping Teachers Understand '
-                    'Every Student’s Reading.',
-                    textAlign: TextAlign.start,
+                  child: const Text(
+                    'ORAL READING ASSESSMENT',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 38,
-                      height: 1.2,
+                      color: textPrimary,
+                      fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF172B4D),
+                      letterSpacing: 1.1,
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'READ-EE supports teachers in assessing '
-                    'English oral reading through reading '
-                    'accuracy, fluency, comprehension, and '
-                    'reading difficulty classification.',
+                ),
+                const SizedBox(height: 28),
+                RichText(
+                  textAlign: TextAlign.center,
+                  text: const TextSpan(
                     style: TextStyle(
-                      fontSize: 16,
-                      height: 1.7,
-                      color: Color(0xFF596579),
+                      fontSize: 44,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.5,
+                      height: 1.2,
                     ),
-                  ),
-                  const SizedBox(height: 28),
-                  Wrap(
-                    alignment: isWide
-                        ? WrapAlignment.start
-                        : WrapAlignment.center,
-                    spacing: 12,
-                    runSpacing: 12,
                     children: [
-                      ElevatedButton.icon(
-                        onPressed: () => openLogin(context),
-                        icon: const Icon(
-                          Icons.arrow_forward_rounded,
-                        ),
-                        label: const Text('GET STARTED'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 20,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                      TextSpan(
+                        text: 'READ. ',
+                        style: TextStyle(color: textPrimary),
+                      ),
+                      TextSpan(
+                        text: 'ASSESS. ',
+                        style: TextStyle(
+                          color: Color(0xFFD97706),
                         ),
                       ),
-                      OutlinedButton(
-                        onPressed: () {
-                          Scrollable.ensureVisible(
-                            context,
-                            duration: const Duration(
-                              milliseconds: 300,
-                            ),
-                          );
-                        },
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: primaryColor,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 20,
-                          ),
-                          side: const BorderSide(
-                            color: primaryColor,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                      TextSpan(
+                        text: 'GROW.',
+                        style: TextStyle(
+                          color: Color(0xFF059669),
                         ),
-                        child: const Text('Explore Features'),
                       ),
                     ],
                   ),
-                ],
-              );
-
-              final illustration = Container(
-                width: double.infinity,
-                constraints: const BoxConstraints(
-                  minHeight: 280,
                 ),
-                padding: const EdgeInsets.all(28),
-                decoration: BoxDecoration(
-                  color: accentColor,
-                  borderRadius: BorderRadius.circular(28),
+                const SizedBox(height: 22),
+                const Text(
+                  'An oral reading assessment tool designed for Grade 4-6 Filipino learners to help teachers assess reading accuracy, speed, and comprehension, identify specific reading difficulties, and provide targeted reading support.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    height: 1.65,
+                    color: textSecondary,
+                  ),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                const SizedBox(height: 38),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 14,
+                  runSpacing: 14,
                   children: [
-                    Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: const Icon(
-                        Icons.auto_stories_rounded,
-                        color: primaryColor,
-                        size: 58,
+                    ElevatedButton.icon(
+                      onPressed: () => openRegister(context),
+                      icon: const Icon(Icons.arrow_forward_rounded, size: 20),
+                      label: const Text('GET STARTED'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        foregroundColor: textPrimary,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 28,
+                          vertical: 18,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 22),
-                    const Text(
-                      'READ. ASSESS. GROW.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: primaryColor,
-                        letterSpacing: 1,
+                    OutlinedButton(
+                      onPressed: () => _showHowItWorksModal(context),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: textPrimary,
+                        side: const BorderSide(
+                          color: textPrimary,
+                          width: 1.5,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 18,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Supporting meaningful reading assessment '
-                      'in the classroom.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        height: 1.5,
-                        color: Color(0xFF596579),
+                      child: const Text(
+                        'How READ-EE Works',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _MiniLabel(
-                          icon: Icons.hearing_rounded,
-                          label: 'Listen',
-                        ),
-                        SizedBox(width: 18),
-                        _MiniLabel(
-                          icon: Icons.analytics_outlined,
-                          label: 'Assess',
-                        ),
-                        SizedBox(width: 18),
-                        _MiniLabel(
-                          icon: Icons.insights_rounded,
-                          label: 'Review',
-                        ),
-                      ],
                     ),
                   ],
                 ),
-              );
-
-              if (isWide) {
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      flex: 6,
-                      child: introduction,
-                    ),
-                    const SizedBox(width: 55),
-                    Expanded(
-                      flex: 5,
-                      child: illustration,
-                    ),
-                  ],
-                );
-              }
-
-              return Column(
-                children: [
-                  introduction,
-                  const SizedBox(height: 40),
-                  illustration,
-                ],
-              );
-            },
+              ],
+            ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildFeatures() {
-    return Container(
-      width: double.infinity,
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 24,
-        vertical: 55,
-      ),
-      child: Column(
-        children: [
-          const Text(
-            'Designed for Reading Assessment',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF172B4D),
-            ),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Tools that help teachers review students’ '
-            'oral reading performance.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 15,
-              color: Color(0xFF596579),
-            ),
-          ),
-          const SizedBox(height: 35),
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: 1100,
-              ),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final columns =
-                      constraints.maxWidth > 850
-                          ? 4
-                          : constraints.maxWidth > 520
-                              ? 2
-                              : 1;
-
-                  final features = [
-                    const _FeatureCard(
-                      icon: Icons.record_voice_over_rounded,
-                      title: 'Reading Accuracy',
-                      description:
-                          'Review recognized words and identify '
-                          'possible reading errors.',
-                    ),
-                    const _FeatureCard(
-                      icon: Icons.speed_rounded,
-                      title: 'Reading Fluency',
-                      description:
-                          'Measure reading speed using words '
-                          'per minute (WPM).',
-                    ),
-                    const _FeatureCard(
-                      icon: Icons.quiz_outlined,
-                      title: 'Comprehension',
-                      description:
-                          'Evaluate understanding through '
-                          'multiple-choice questions.',
-                    ),
-                    const _FeatureCard(
-                      icon: Icons.assessment_outlined,
-                      title: 'Classification',
-                      description:
-                          'Use assessment results to classify '
-                          'the student’s reading performance.',
-                    ),
-                  ];
-
-                  return Wrap(
-                    spacing: 16,
-                    runSpacing: 16,
-                    children: features.map((feature) {
-                      return SizedBox(
-                        width: (
-                          constraints.maxWidth -
-                          (columns - 1) * 16
-                        ) / columns,
-                        child: feature,
-                      );
-                    }).toList(),
-                  );
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHowItWorks() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 24,
-        vertical: 55,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            maxWidth: 1000,
-          ),
-          child: Column(
-            children: [
-              const Text(
-                'How READ-EE Works',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF172B4D),
-                ),
-              ),
-              const SizedBox(height: 35),
-              const Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 30,
-                runSpacing: 30,
-                children: [
-                  _StepItem(
-                    number: '01',
-                    title: 'Read',
-                    description:
-                        'The student reads an assigned '
-                        'English passage aloud.',
-                  ),
-                  _StepItem(
-                    number: '02',
-                    title: 'Assess',
-                    description:
-                        'The system evaluates accuracy, '
-                        'fluency, and comprehension.',
-                  ),
-                  _StepItem(
-                    number: '03',
-                    title: 'Review',
-                    description:
-                        'The teacher reviews the results '
-                        'and reading recognition errors.',
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCallToAction(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      color: primaryColor,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 24,
-        vertical: 48,
-      ),
-      child: Column(
-        children: [
-          const Text(
-            'Ready to Get Started?',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 30,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Sign in to manage your classes and reading assessments.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 15,
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 25),
-          ElevatedButton(
-            onPressed: () => openLogin(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: primaryColor,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 30,
-                vertical: 20,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: const Text(
-              'CONTINUE TO LOGIN',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFooter() {
-    return Container(
-      width: double.infinity,
-      color: const Color(0xFF172B4D),
-      padding: const EdgeInsets.all(22),
-      child: const Text(
-        'READ-EE | Reading Assessment Support for Teachers',
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          color: Colors.white70,
-          fontSize: 13,
-        ),
-      ),
-    );
-  }
-}
-
-class _MiniLabel extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _MiniLabel({
-    required this.icon,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(
-          icon,
-          color: LandingScreen.primaryColor,
-          size: 25,
-        ),
-        const SizedBox(height: 6),
-        Text(
-          label,
-          style: const TextStyle(
-            color: LandingScreen.primaryColor,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _FeatureCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String description;
-
-  const _FeatureCard({
-    required this.icon,
-    required this.title,
-    required this.description,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: LandingScreen.backgroundColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFE3EAF5),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            icon,
-            size: 34,
-            color: LandingScreen.primaryColor,
-          ),
-          const SizedBox(height: 18),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF172B4D),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            description,
-            style: const TextStyle(
-              fontSize: 14,
-              height: 1.6,
-              color: Color(0xFF596579),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StepItem extends StatelessWidget {
-  final String number;
-  final String title;
-  final String description;
-
-  const _StepItem({
-    required this.number,
-    required this.title,
-    required this.description,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 250,
-      child: Column(
-        children: [
-          Container(
-            width: 58,
-            height: 58,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              color: LandingScreen.accentColor,
-              shape: BoxShape.circle,
-            ),
-            child: Text(
-              number,
-              style: const TextStyle(
-                color: LandingScreen.primaryColor,
-                fontSize: 19,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(height: 15),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF172B4D),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            description,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 14,
-              height: 1.6,
-              color: Color(0xFF596579),
-            ),
-          ),
-        ],
       ),
     );
   }
