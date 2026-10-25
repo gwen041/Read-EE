@@ -32,6 +32,12 @@ class ResultsScreen extends StatefulWidget {
 }
 
 class _ResultsScreenState extends State<ResultsScreen> {
+  static const Color primaryColor = Color(0xFFF5BE41);
+  static const Color textPrimary = Color(0xFF1E293B);
+  static const Color textSecondary = Color(0xFF64748B);
+  static const Color backgroundColor = Color(0xFFFAF9F5);
+  static const Color accentColor = Color(0xFFFEF3C7);
+
   bool isLoading = true;
   bool isFinalized = false;
 
@@ -39,10 +45,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
   Map<String, dynamic>? result;
 
-  // Keeps the original automated assessment.
   Map<String, dynamic>? initialResult;
 
-  // Tracks the saved PostgreSQL Assessment ID so verification updates the same row.
   int? _savedAssessmentId;
 
   @override
@@ -101,10 +105,24 @@ class _ResultsScreenState extends State<ResultsScreen> {
       final initialAccuracyValue = initialAccuracy != null
           ? (initialAccuracy['accuracy'] as num).toDouble()
           : (accuracy['accuracy'] as num).toDouble();
+      final initialWpmValue = initialResult?['wpm'] != null
+          ? (initialResult!['wpm']['wpm'] as num).toDouble()
+          : (wpm['wpm'] as num).toDouble();
+      final initialCompValue = initialResult?['comprehension'] != null
+          ? (initialResult!['comprehension']['score'] as num).toDouble()
+          : (comprehension['score'] as num).toDouble();
+      final initialClassificationValue = initialResult?['classification']?.toString() ?? classification;
+      final initialProfileValue = initialResult?['reading_profile']?['reading_profile']?.toString() ??
+          Assessment.getReadingProfile(initialAccuracyValue, initialCompValue);
 
       final accuracyDetails = {
         ...accuracy,
         'initialAccuracy': initialAccuracyValue,
+        'initialWpm': initialWpmValue,
+        'initialComprehension': initialCompValue,
+        'initialClassification': initialClassificationValue,
+        'initialReadingProfile': initialProfileValue,
+        'audioPath': widget.audioPath,
         'isVerified': isFinalized,
         if (result!['reading_profile'] != null)
           'reading_profile': result!['reading_profile'],
@@ -371,125 +389,181 @@ class _ResultsScreenState extends State<ResultsScreen> {
     );
   }
 
-  Widget buildResultCard({
-    required String title,
-    required String value,
-  }) {
-    return Card(
-      child: ListTile(
-        title: Text(title),
-        trailing: Text(
-          value,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
+  String getShortClassificationLabel(String classification) {
+    final c = classification.toLowerCase().trim();
+    if (c.contains('decoding')) return 'DECODING';
+    if (c.contains('fluency')) return 'FLUENCY';
+    if (c.contains('comprehension')) return 'COMPREHENSION';
+    return 'NORMAL / NO DIFFICULTY';
   }
 
   Color _getProfileColor(String profile) {
     switch (profile.toLowerCase().trim()) {
       case 'independent':
-        return Colors.green;
+        return const Color(0xFF059669);
       case 'instructional':
-        return Colors.blue;
+        return const Color(0xFF0284C7);
       case 'frustration':
-        return Colors.orange.shade800;
+        return const Color(0xFFE11D48);
       default:
-        return Colors.blueGrey;
+        return const Color(0xFF64748B);
     }
   }
 
   Color _getClassificationColor(String classification) {
-    switch (classification.toLowerCase().trim()) {
-      case 'normal':
-        return Colors.green;
-      case 'decoding':
-        return Colors.orange.shade800;
-      case 'fluency':
-        return Colors.purple;
-      case 'comprehension':
-        return Colors.teal;
-      default:
-        return Colors.blueGrey;
-    }
+    final c = classification.toLowerCase().trim();
+    if (c.contains('decoding')) return const Color(0xFFD97706);
+    if (c.contains('fluency')) return const Color(0xFF4F46E5);
+    if (c.contains('comprehension')) return const Color(0xFFC2410C);
+    return const Color(0xFF047857);
+  }
+
+  Widget _buildMetricCard({
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color color,
+    required Color bgColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 14, color: color),
+              const SizedBox(width: 5),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: textPrimary,
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget buildInteractiveBadgeCard({
-    required IconData icon,
     required String title,
     required String subtitle,
     required String badgeText,
     required Color color,
     required VoidCallback onTap,
   }) {
-    return Card(
-      elevation: 0,
-      color: color.withValues(alpha: 0.08),
-      shape: RoundedRectangleBorder(
+    return Container(
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: color.withValues(alpha: 0.3)),
+        border: Border.all(
+          color: color.withValues(alpha: 0.35),
+          width: 1.2,
+        ),
       ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Icon(icon, color: color, size: 28),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        badgeText.toUpperCase(),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize: 10.5,
                           fontWeight: FontWeight.bold,
                           color: color,
+                          letterSpacing: 0.5,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Details',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
+                      const SizedBox(height: 5),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: color.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Text(
+                          badgeText.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.bold,
+                            color: color,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 2),
-                  Icon(Icons.chevron_right, color: color, size: 22),
-                ],
-              ),
-            ],
+                ),
+                const SizedBox(width: 10),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFCBD5E1)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Details',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 16,
+                        color: Colors.grey.shade700,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -514,20 +588,13 @@ class _ResultsScreenState extends State<ResultsScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: Row(
-            children: [
-              Icon(Icons.auto_stories, color: color, size: 26),
-              const SizedBox(width: 10),
-              const Expanded(
-                child: Text(
-                  'Phil-IRI Reading Profile',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
+          title: const Text(
+            'Phil-IRI Reading Profile',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: textPrimary,
+            ),
           ),
           content: SingleChildScrollView(
             child: Column(
@@ -546,7 +613,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
                     children: [
                       const Text(
                         'Overall Reading Profile',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                        style: TextStyle(fontSize: 12, color: textSecondary),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -567,9 +634,9 @@ class _ResultsScreenState extends State<ResultsScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
+                          color: const Color(0xFFF8FAFC),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey.shade300),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -577,7 +644,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
                             const Text(
                               'Word Reading',
                               style: TextStyle(
-                                  fontSize: 11, color: Colors.grey),
+                                  fontSize: 11, color: textSecondary),
                             ),
                             const SizedBox(height: 2),
                             Text(
@@ -585,13 +652,14 @@ class _ResultsScreenState extends State<ResultsScreen> {
                               style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
+                                color: textPrimary,
                               ),
                             ),
                             Text(
                               '${accuracyScore.round()}% accuracy',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 11,
-                                color: Colors.grey.shade700,
+                                color: textSecondary,
                               ),
                             ),
                           ],
@@ -603,9 +671,9 @@ class _ResultsScreenState extends State<ResultsScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
+                          color: const Color(0xFFF8FAFC),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey.shade300),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -613,7 +681,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
                             const Text(
                               'Comprehension',
                               style: TextStyle(
-                                  fontSize: 11, color: Colors.grey),
+                                  fontSize: 11, color: textSecondary),
                             ),
                             const SizedBox(height: 2),
                             Text(
@@ -621,13 +689,14 @@ class _ResultsScreenState extends State<ResultsScreen> {
                               style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
+                                color: textPrimary,
                               ),
                             ),
                             Text(
                               '${comprehensionScore.round()}% score',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 11,
-                                color: Colors.grey.shade700,
+                                color: textSecondary,
                               ),
                             ),
                           ],
@@ -641,8 +710,9 @@ class _ResultsScreenState extends State<ResultsScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.blueGrey.withValues(alpha: 0.08),
+                    color: const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -652,13 +722,17 @@ class _ResultsScreenState extends State<ResultsScreen> {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
+                          color: textPrimary,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         explanation,
-                        style:
-                            const TextStyle(fontSize: 13, height: 1.4),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          height: 1.45,
+                          color: textPrimary,
+                        ),
                       ),
                     ],
                   ),
@@ -691,20 +765,13 @@ class _ResultsScreenState extends State<ResultsScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: Row(
-            children: [
-              Icon(Icons.psychology, color: color, size: 26),
-              const SizedBox(width: 10),
-              const Expanded(
-                child: Text(
-                  'Reader Classification',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
+          title: const Text(
+            'Difficulty Classification',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: textPrimary,
+            ),
           ),
           content: SingleChildScrollView(
             child: Column(
@@ -723,11 +790,11 @@ class _ResultsScreenState extends State<ResultsScreen> {
                     children: [
                       const Text(
                         'Classification',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                        style: TextStyle(fontSize: 12, color: textSecondary),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        classification.toUpperCase(),
+                        getShortClassificationLabel(classification),
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -742,8 +809,9 @@ class _ResultsScreenState extends State<ResultsScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.blueGrey.withValues(alpha: 0.08),
+                    color: const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -753,13 +821,17 @@ class _ResultsScreenState extends State<ResultsScreen> {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
+                          color: textPrimary,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         explanation,
-                        style:
-                            const TextStyle(fontSize: 13, height: 1.4),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          height: 1.45,
+                          color: textPrimary,
+                        ),
                       ),
                     ],
                   ),
@@ -779,10 +851,6 @@ class _ResultsScreenState extends State<ResultsScreen> {
   }
 
   Widget buildInitialAssessmentCard() {
-    if (initialResult == null) {
-      return const SizedBox.shrink();
-    }
-
     final initialAccuracy = initialResult!['accuracy'];
     final initialWpm = initialResult!['wpm'];
     final initialComprehension = initialResult!['comprehension'];
@@ -797,6 +865,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
         (initialAccuracy['accuracy'] as num).toDouble();
     final comprehensionScore =
         (initialComprehension['score'] as num).toDouble();
+    final wpmScore = (initialWpm['wpm'] as num).toDouble();
 
     final wordLevel = initialProfile?['word_reading_level']?.toString() ??
         Assessment.getWordReadingLevel(accuracyScore);
@@ -813,97 +882,137 @@ class _ResultsScreenState extends State<ResultsScreen> {
     final profileColor = _getProfileColor(overallProfile);
     final classColor = _getClassificationColor(initialClassification);
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Initial Automated Assessment',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Initial System Assessment',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Results generated by speech recognition before teacher review.',
+            style: TextStyle(
+              fontSize: 12.5,
+              color: textSecondary,
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          Row(
+            children: [
+              Expanded(
+                child: _buildMetricCard(
+                  label: 'Accuracy',
+                  value: '${accuracyScore.round()}%',
+                  icon: Icons.fact_check_outlined,
+                  color: const Color(0xFF0284C7),
+                  bgColor: const Color(0xFFF0F9FF),
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Results generated from the initial speech recognition and assessment.',
-            ),
-            const SizedBox(height: 15),
-            buildResultCard(
-              title: 'Reading Accuracy',
-              value: '${initialAccuracy['accuracy']}%',
-            ),
-            buildResultCard(
-              title: 'Words Per Minute',
-              value: '${initialWpm['wpm'].toStringAsFixed(2)}',
-            ),
-            buildResultCard(
-              title: 'Comprehension Score',
-              value: '${initialComprehension['score']}%',
-            ),
-            const SizedBox(height: 12),
-            buildInteractiveBadgeCard(
-              icon: Icons.auto_stories,
-              title: 'Phil-IRI Reading Profile',
-              subtitle: 'Tap to view details',
-              badgeText: overallProfile,
-              color: profileColor,
-              onTap: () {
-                _showReadingProfileModal(
-                  context: context,
-                  wordLevel: wordLevel,
-                  compLevel: compLevel,
-                  overallProfile: overallProfile,
-                  explanation: profileExplanation,
-                  accuracyScore: accuracyScore,
-                  comprehensionScore: comprehensionScore,
-                );
-              },
-            ),
-            const SizedBox(height: 8),
-            buildInteractiveBadgeCard(
-              icon: Icons.psychology,
-              title: 'Reader Classification',
-              subtitle: 'Tap to view details',
-              badgeText: initialClassification,
-              color: classColor,
-              onTap: () {
-                _showClassificationModal(
-                  context: context,
-                  classification: initialClassification,
-                  explanation: classExplanation,
-                );
-              },
-            ),
-          ],
-        ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildMetricCard(
+                  label: 'Speed',
+                  value: '${wpmScore.round()} WPM',
+                  icon: Icons.timer_outlined,
+                  color: const Color(0xFF0D9488),
+                  bgColor: const Color(0xFFF0FDFA),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildMetricCard(
+                  label: 'Comprehension',
+                  value: '${comprehensionScore.round()}%',
+                  icon: Icons.auto_stories_outlined,
+                  color: const Color(0xFF7C3AED),
+                  bgColor: const Color(0xFFF5F3FF),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          buildInteractiveBadgeCard(
+            title: 'DIFFICULTY CLASSIFICATION',
+            subtitle: 'Tap to view details',
+            badgeText: getShortClassificationLabel(initialClassification),
+            color: classColor,
+            onTap: () {
+              _showClassificationModal(
+                context: context,
+                classification: initialClassification,
+                explanation: classExplanation,
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+
+          buildInteractiveBadgeCard(
+            title: 'PHIL-IRI READING PROFILE',
+            subtitle: 'Tap to view details',
+            badgeText: overallProfile,
+            color: profileColor,
+            onTap: () {
+              _showReadingProfileModal(
+                context: context,
+                wordLevel: wordLevel,
+                compLevel: compLevel,
+                overallProfile: overallProfile,
+                explanation: profileExplanation,
+                accuracyScore: accuracyScore,
+                comprehensionScore: comprehensionScore,
+              );
+            },
+          ),
+        ],
       ),
     );
   }
 
   Widget buildFinalAssessmentCard(
-    Map<String, dynamic> accuracy,
-    Map<String, dynamic> wpm,
-    Map<String, dynamic> comprehension,
+    dynamic accuracy,
+    dynamic wpm,
+    dynamic comprehension,
     dynamic classification,
   ) {
-    final profileData = result?['reading_profile'] != null
+    final profile = result?['reading_profile'] != null
         ? Map<String, dynamic>.from(result!['reading_profile'])
         : null;
+
     final accuracyScore =
         (accuracy['accuracy'] as num).toDouble();
     final comprehensionScore =
         (comprehension['score'] as num).toDouble();
+    final wpmScore = (wpm['wpm'] as num).toDouble();
 
-    final wordLevel = profileData?['word_reading_level']?.toString() ??
+    final wordLevel = profile?['word_reading_level']?.toString() ??
         Assessment.getWordReadingLevel(accuracyScore);
-    final compLevel = profileData?['comprehension_level']?.toString() ??
+    final compLevel = profile?['comprehension_level']?.toString() ??
         Assessment.getComprehensionLevel(comprehensionScore);
-    final overallProfile = profileData?['reading_profile']?.toString() ??
+    final overallProfile = profile?['reading_profile']?.toString() ??
         Assessment.getReadingProfile(accuracyScore, comprehensionScore);
-    final profileExplanation = profileData?['explanation']?.toString() ??
+    final profileExplanation = profile?['explanation']?.toString() ??
         Assessment.getProfileExplanation(accuracyScore, comprehensionScore);
 
     final classStr = classification.toString();
@@ -913,76 +1022,112 @@ class _ResultsScreenState extends State<ResultsScreen> {
     final profileColor = _getProfileColor(overallProfile);
     final classColor = _getClassificationColor(classStr);
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              isFinalized
-                  ? 'Teacher-Verified Final Assessment'
-                  : 'Assessment Results',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            isFinalized ? 'Final Verified Assessment' : 'Assessment Summary',
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: textPrimary,
             ),
-            if (isFinalized) ...[
-              const SizedBox(height: 8),
-              const Text(
-                'Final results after teacher verification of the reading errors.',
+          ),
+          const SizedBox(height: 4),
+          Text(
+            isFinalized
+                ? 'Teacher-verified oral reading diagnosis and score evaluation.'
+                : 'Current oral reading evaluation results.',
+            style: const TextStyle(
+              fontSize: 12.5,
+              color: textSecondary,
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          Row(
+            children: [
+              Expanded(
+                child: _buildMetricCard(
+                  label: 'Accuracy',
+                  value: '${accuracyScore.round()}%',
+                  icon: Icons.fact_check_outlined,
+                  color: const Color(0xFF0284C7),
+                  bgColor: const Color(0xFFF0F9FF),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildMetricCard(
+                  label: 'Speed',
+                  value: '${wpmScore.round()} WPM',
+                  icon: Icons.timer_outlined,
+                  color: const Color(0xFF0D9488),
+                  bgColor: const Color(0xFFF0FDFA),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildMetricCard(
+                  label: 'Comprehension',
+                  value: '${comprehensionScore.round()}%',
+                  icon: Icons.auto_stories_outlined,
+                  color: const Color(0xFF7C3AED),
+                  bgColor: const Color(0xFFF5F3FF),
+                ),
               ),
             ],
-            const SizedBox(height: 15),
-            buildResultCard(
-              title: 'Reading Accuracy',
-              value: '${accuracy['accuracy']}%',
-            ),
-            buildResultCard(
-              title: 'Words Per Minute',
-              value: '${wpm['wpm'].toStringAsFixed(2)}',
-            ),
-            buildResultCard(
-              title: 'Comprehension Score',
-              value: '${comprehension['score']}%',
-            ),
-            const SizedBox(height: 12),
-            buildInteractiveBadgeCard(
-              icon: Icons.auto_stories,
-              title: 'Phil-IRI Reading Profile',
-              subtitle: 'Tap to view details',
-              badgeText: overallProfile,
-              color: profileColor,
-              onTap: () {
-                _showReadingProfileModal(
-                  context: context,
-                  wordLevel: wordLevel,
-                  compLevel: compLevel,
-                  overallProfile: overallProfile,
-                  explanation: profileExplanation,
-                  accuracyScore: accuracyScore,
-                  comprehensionScore: comprehensionScore,
-                );
-              },
-            ),
-            const SizedBox(height: 8),
-            buildInteractiveBadgeCard(
-              icon: Icons.psychology,
-              title: 'Reader Classification',
-              subtitle: 'Tap to view details',
-              badgeText: classStr,
-              color: classColor,
-              onTap: () {
-                _showClassificationModal(
-                  context: context,
-                  classification: classStr,
-                  explanation: classExplanation,
-                );
-              },
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 12),
+
+          buildInteractiveBadgeCard(
+            title: 'DIFFICULTY CLASSIFICATION',
+            subtitle: 'Tap to view details',
+            badgeText: getShortClassificationLabel(classStr),
+            color: classColor,
+            onTap: () {
+              _showClassificationModal(
+                context: context,
+                classification: classStr,
+                explanation: classExplanation,
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+
+          buildInteractiveBadgeCard(
+            title: 'PHIL-IRI READING PROFILE',
+            subtitle: 'Tap to view details',
+            badgeText: overallProfile,
+            color: profileColor,
+            onTap: () {
+              _showReadingProfileModal(
+                context: context,
+                wordLevel: wordLevel,
+                compLevel: compLevel,
+                overallProfile: overallProfile,
+                explanation: profileExplanation,
+                accuracyScore: accuracyScore,
+                comprehensionScore: comprehensionScore,
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -991,8 +1136,23 @@ class _ResultsScreenState extends State<ResultsScreen> {
   Widget build(BuildContext context) {
     if (isLoading) {
       return Scaffold(
+        backgroundColor: backgroundColor,
         appBar: AppBar(
-          title: const Text('Assessment Results'),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          bottom: const PreferredSize(
+            preferredSize: Size.fromHeight(1),
+            child: Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
+          ),
+          title: const Text(
+            'Assessment Results',
+            style: TextStyle(
+              color: textPrimary,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
         ),
         body: const Center(
           child: CircularProgressIndicator(),
@@ -1002,8 +1162,23 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
     if (errorMessage != null) {
       return Scaffold(
+        backgroundColor: backgroundColor,
         appBar: AppBar(
-          title: const Text('Assessment Results'),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          bottom: const PreferredSize(
+            preferredSize: Size.fromHeight(1),
+            child: Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
+          ),
+          title: const Text(
+            'Assessment Results',
+            style: TextStyle(
+              color: textPrimary,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
         ),
         body: Center(
           child: Padding(
@@ -1012,15 +1187,15 @@ class _ResultsScreenState extends State<ResultsScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(
-                  Icons.error_outline,
+                  Icons.error_outline_rounded,
                   size: 48,
-                  color: Colors.red,
+                  color: Color(0xFFDC2626),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   errorMessage!.replaceAll('Exception: ', ''),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 16),
+                  style: const TextStyle(fontSize: 15, color: textPrimary),
                 ),
                 const SizedBox(height: 24),
                 SizedBox(
@@ -1028,8 +1203,19 @@ class _ResultsScreenState extends State<ResultsScreen> {
                   height: 48,
                   child: ElevatedButton.icon(
                     onPressed: isLoading ? null : submitAssessment,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('RETRY SUBMISSION'),
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text(
+                      'RETRY SUBMISSION',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      foregroundColor: textPrimary,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -1046,189 +1232,281 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
     final hasErrors = hasReadingErrors();
 
-    final mismatches = (accuracy['mismatch_words'] as List?) ?? [];
-    final missing = (accuracy['missing_words'] as List?) ?? [];
-    final extra = (accuracy['extra_words'] as List?) ?? [];
-
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Assessment Results'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
+        ),
+        title: const Text(
+          'Assessment Results',
+          style: TextStyle(
+            color: textPrimary,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.studentName,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              widget.materialTitle,
-              style: const TextStyle(
-                fontSize: 18,
-              ),
-            ),
-            const SizedBox(height: 25),
-            const Text(
-              'Assessment Results',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 20),
-            if (isFinalized) ...[
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Reading Verification Completed',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'The teacher reviewed the detected reading differences. '
-                        'The final assessment below reflects the teacher verification.',
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.02),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
-                ),
-              ),
-              const SizedBox(height: 15),
-              buildInitialAssessmentCard(),
-              const SizedBox(height: 15),
-            ],
-            if (!isFinalized && hasErrors) ...[
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
                     children: [
-                      const Text(
-                        'Reading Verification Needed',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                      CircleAvatar(
+                        radius: 22,
+                        backgroundColor: accentColor,
+                        child: Text(
+                          widget.studentName.isNotEmpty
+                              ? widget.studentName[0].toUpperCase()
+                              : 'S',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: textPrimary,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'The system detected possible reading differences. '
-                        'Please review the recording before finalizing the assessment.',
-                      ),
-                      const SizedBox(height: 15),
-                      if (mismatches.isNotEmpty)
-                        ...mismatches.map(
-                          (item) {
-                            final mismatch = Map<String, dynamic>.from(
-                              item as Map,
-                            );
-
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 5),
-                              child: Text(
-                                'Expected: ${mismatch['expected']}  '
-                                'Detected: ${mismatch['student']}',
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.studentName,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: textPrimary,
                               ),
-                            );
-                          },
-                        ),
-                      if (missing.isNotEmpty) ...[
-                        const SizedBox(height: 5),
-                        const Text(
-                          'Missing words:',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        ...missing.map(
-                          (item) {
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 3),
-                              child: Text('• ${getWordFromError(item)}'),
-                            );
-                          },
-                        ),
-                      ],
-                      if (extra.isNotEmpty) ...[
-                        const SizedBox(height: 5),
-                        const Text(
-                          'Extra words:',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        ...extra.map(
-                          (item) {
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 3),
-                              child: Text('• ${getWordFromError(item)}'),
-                            );
-                          },
-                        ),
-                      ],
-                      const SizedBox(height: 15),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            openReadingVerification(accuracy);
-                          },
-                          child: const Text('REVIEW READING ERRORS'),
+                            ),
+                            const SizedBox(height: 3),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.menu_book_rounded,
+                                  size: 14,
+                                  color: textSecondary,
+                                ),
+                                const SizedBox(width: 5),
+                                Expanded(
+                                  child: Text(
+                                    widget.materialTitle,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: textSecondary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 15),
-            ],
-            buildFinalAssessmentCard(
-              accuracy,
-              wpm,
-              comprehension,
-              classification,
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  saveAssessment();
+                const SizedBox(height: 16),
 
-                  if (!kIsWeb) {
-                    try {
-                      final tempFile = File(widget.audioPath);
-                      if (tempFile.existsSync()) {
-                        tempFile.deleteSync();
+                if (isFinalized) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFECFDF5),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFA7F3D0)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(
+                          Icons.verified_rounded,
+                          color: Color(0xFF059669),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Text(
+                                'Teacher Verification Completed',
+                                style: TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF065F46),
+                                ),
+                              ),
+                              SizedBox(height: 3),
+                              Text(
+                                'The teacher reviewed the detected reading differences. The finalized assessment below reflects the verified results.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF047857),
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  buildInitialAssessmentCard(),
+                  const SizedBox(height: 14),
+                ],
+
+                if (!isFinalized && hasErrors) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFFBEB),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFFDE68A)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: const [
+                            Icon(
+                              Icons.rate_review_outlined,
+                              color: Color(0xFFD97706),
+                              size: 20,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Reading Verification Recommended',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF92400E),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Possible reading differences were detected during automated speech evaluation. Review the recording to verify student miscues before finalizing.',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: Color(0xFFB45309),
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 44,
+                          child: ElevatedButton.icon(
+                            onPressed: () => openReadingVerification(accuracy),
+                            icon: const Icon(Icons.edit_note_rounded, size: 20),
+                            label: const Text(
+                              'REVIEW READING ERRORS',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1E293B),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
+
+                buildFinalAssessmentCard(
+                  accuracy,
+                  wpm,
+                  comprehension,
+                  classification,
+                ),
+                const SizedBox(height: 20),
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      saveAssessment();
+
+                      if (!kIsWeb) {
+                        try {
+                          final tempFile = File(widget.audioPath);
+                          if (tempFile.existsSync()) {
+                            tempFile.deleteSync();
+                          }
+                        } catch (_) {}
                       }
-                    } catch (_) {}
-                  }
 
-                  Navigator.popUntil(
-                    context,
-                    (route) =>
-                        route.settings.name == '/dashboard' || route.isFirst,
-                  );
-                },
-                child: const Text('BACK TO DASHBOARD'),
-              ),
+                      Navigator.popUntil(
+                        context,
+                        (route) =>
+                            route.settings.name == '/dashboard' ||
+                            route.isFirst,
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      foregroundColor: textPrimary,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text(
+                      'BACK TO DASHBOARD',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -33,6 +34,14 @@ class _ReadingVerificationScreenState
 
   Duration? stopAtPosition;
 
+  Duration? _currentStartPosition;
+
+  Timer? _snippetTimer;
+
+  bool _seekVerified = false;
+
+  bool _sourceLoaded = false;
+
   @override
   void initState() {
     super.initState();
@@ -40,7 +49,17 @@ class _ReadingVerificationScreenState
     audioPlayer.onPositionChanged.listen((newPosition) {
       if (!mounted) return;
 
-      if (stopAtPosition != null &&
+      if (_currentStartPosition != null) {
+        if ((newPosition - _currentStartPosition!).abs() <
+                const Duration(milliseconds: 1500) ||
+            (newPosition >= _currentStartPosition! &&
+                (stopAtPosition == null || newPosition <= stopAtPosition!))) {
+          _seekVerified = true;
+        }
+      }
+
+      if (_seekVerified &&
+          stopAtPosition != null &&
           newPosition >= stopAtPosition!) {
         stopSection();
         return;
@@ -54,16 +73,22 @@ class _ReadingVerificationScreenState
     audioPlayer.onPlayerComplete.listen((_) {
       if (!mounted) return;
 
+      _snippetTimer?.cancel();
+      _snippetTimer = null;
       setState(() {
         playingIndex = null;
         position = Duration.zero;
         stopAtPosition = null;
+        _seekVerified = false;
+        _currentStartPosition = null;
       });
     });
   }
 
   @override
   void dispose() {
+    _snippetTimer?.cancel();
+    audioPlayer.stop();
     audioPlayer.dispose();
     super.dispose();
   }
@@ -121,34 +146,32 @@ class _ReadingVerificationScreenState
     return decisions.length == totalErrors;
   }
 
-  /// Marks every flagged item as "Student read correctly / Ignore STT noise"
   void markAllStudentCorrect() {
     setState(() {
       int idx = 0;
       for (int i = 0; i < mismatches.length; i++) {
-        decisions[idx++] = true; // true = student said expected word
+        decisions[idx++] = true;
       }
       for (int i = 0; i < missingWords.length; i++) {
-        decisions[idx++] = false; // false = word was NOT missing
+        decisions[idx++] = false;
       }
       for (int i = 0; i < extraWords.length; i++) {
-        decisions[idx++] = false; // false = ignore extra word / STT noise
+        decisions[idx++] = false;
       }
     });
   }
 
-  /// Marks every flagged item as a confirmed reading error
   void keepAllDetectedErrors() {
     setState(() {
       int idx = 0;
       for (int i = 0; i < mismatches.length; i++) {
-        decisions[idx++] = false; // false = keep mismatch error
+        decisions[idx++] = false;
       }
       for (int i = 0; i < missingWords.length; i++) {
-        decisions[idx++] = true; // true = keep missing error
+        decisions[idx++] = true;
       }
       for (int i = 0; i < extraWords.length; i++) {
-        decisions[idx++] = true; // true = keep extra word error
+        decisions[idx++] = true;
       }
     });
   }
@@ -175,7 +198,20 @@ class _ReadingVerificationScreenState
       return;
     }
 
-    await audioPlayer.stop();
+    if (widget.audioPath.trim().isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Audio recording is not available for playback.'),
+        ),
+      );
+      return;
+    }
+
+    _snippetTimer?.cancel();
+    _snippetTimer = null;
+    _seekVerified = false;
+    stopAtPosition = null;
 
     final startSeconds =
         (start - 0.8).clamp(
@@ -195,29 +231,84 @@ class _ReadingVerificationScreenState
           (endSeconds * 1000).round(),
     );
 
+    final snippetDuration = endPosition - startPosition;
+
+    _currentStartPosition = startPosition;
+
     setState(() {
       playingIndex = index;
       position = startPosition;
-      stopAtPosition = endPosition;
     });
 
-    final source = kIsWeb
-        ? UrlSource(widget.audioPath)
-        : DeviceFileSource(widget.audioPath);
+    try {
+      final source = kIsWeb
+          ? UrlSource(widget.audioPath)
+          : DeviceFileSource(widget.audioPath);
 
-    await audioPlayer.play(
-      source,
-      position: startPosition,
-    );
+      if (!_sourceLoaded) {
+        await audioPlayer.play(
+          source,
+          position: startPosition,
+        );
+        _sourceLoaded = true;
+      } else {
+        try {
+          await audioPlayer.pause();
+          await audioPlayer.seek(startPosition);
+          await audioPlayer.resume();
+        } catch (_) {
+          await audioPlayer.play(
+            source,
+            position: startPosition,
+          );
+        }
+      }
+
+      stopAtPosition = endPosition;
+
+      _snippetTimer = Timer(
+        snippetDuration + const Duration(milliseconds: 300),
+        () {
+          if (mounted && playingIndex == index) {
+            stopSection();
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        _snippetTimer?.cancel();
+        _snippetTimer = null;
+        setState(() {
+          playingIndex = null;
+          stopAtPosition = null;
+          _seekVerified = false;
+          _currentStartPosition = null;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Could not play audio snippet. You can still review and verify errors below.',
+            ),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> stopSection() async {
-    await audioPlayer.stop();
+    _snippetTimer?.cancel();
+    _snippetTimer = null;
+    stopAtPosition = null;
+    _seekVerified = false;
+    _currentStartPosition = null;
+
+    try {
+      await audioPlayer.pause();
+    } catch (_) {}
 
     if (mounted) {
       setState(() {
         playingIndex = null;
-        stopAtPosition = null;
       });
     }
   }
@@ -246,118 +337,172 @@ class _ReadingVerificationScreenState
         '${remainingSeconds.toStringAsFixed(1).padLeft(4, '0')}';
   }
 
+  static const Color primaryColor = Color(0xFFF5BE41);
+  static const Color textPrimary = Color(0xFF1E293B);
+  static const Color textSecondary = Color(0xFF64748B);
+  static const Color backgroundColor = Color(0xFFFAF9F5);
+
   @override
   Widget build(BuildContext context) {
     int index = 0;
 
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Reading Verification'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
+        ),
+        title: const Text(
+          'Reading Verification',
+          style: TextStyle(
+            color: textPrimary,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.studentName,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 4),
-
-            Text(
-              widget.materialTitle,
-              style: const TextStyle(
-                fontSize: 16,
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            Text(
-              totalErrors == 1
-                  ? 'The system detected 1 possible reading error (${decisions.length}/1 reviewed).'
-                  : 'The system detected $totalErrors possible reading errors (${decisions.length}/$totalErrors reviewed).',
-              style: const TextStyle(
-                fontSize: 15,
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 780),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                OutlinedButton.icon(
-                  onPressed: markAllStudentCorrect,
-                  icon: const Icon(Icons.check_circle_outline, size: 18),
-                  label: const Text('Mark All as Read Correctly'),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFEF3C7),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.verified_user_rounded,
+                              color: textPrimary,
+                              size: 18,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              widget.studentName,
+                              style: const TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold,
+                                color: textPrimary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Passage: ${widget.materialTitle} • ${totalErrors == 1 ? "1 possible error" : "$totalErrors possible errors"} (${decisions.length}/$totalErrors reviewed)',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                OutlinedButton.icon(
-                  onPressed: keepAllDetectedErrors,
-                  icon: const Icon(Icons.error_outline, size: 18),
-                  label: const Text('Keep All as Errors'),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: markAllStudentCorrect,
+                      icon: const Icon(Icons.check_circle_outline, size: 16),
+                      label: const Text('Mark All Read Correctly'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF047857),
+                        side: const BorderSide(color: Color(0xFFA7F3D0)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: keepAllDetectedErrors,
+                      icon: const Icon(Icons.error_outline, size: 16),
+                      label: const Text('Keep All as Errors'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFDC2626),
+                        side: const BorderSide(color: Color(0xFFFECACA)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: ListView(
+                    children: [
+                      if (mismatches.isNotEmpty)
+                        ...mismatches.map((item) {
+                          final currentIndex = index++;
+                          return _buildMismatchCard(currentIndex, item);
+                        }),
+                      if (missingWords.isNotEmpty)
+                        ...missingWords.map((item) {
+                          final currentIndex = index++;
+                          return _buildMissingWordCard(currentIndex, item);
+                        }),
+                      if (extraWords.isNotEmpty)
+                        ...extraWords.map((item) {
+                          final currentIndex = index++;
+                          return _buildExtraWordCard(currentIndex, item);
+                        }),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 46,
+                  child: ElevatedButton(
+                    onPressed: confirmReview,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      foregroundColor: textPrimary,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text(
+                      'CONFIRM REVIEW',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
-
-            const SizedBox(height: 12),
-
-            Expanded(
-              child: ListView(
-                children: [
-                  if (mismatches.isNotEmpty)
-                    ...mismatches.map((item) {
-                      final currentIndex = index++;
-
-                      return _buildMismatchCard(
-                        currentIndex,
-                        item,
-                      );
-                    }),
-
-                  if (missingWords.isNotEmpty)
-                    ...missingWords.map((item) {
-                      final currentIndex = index++;
-
-                      return _buildMissingWordCard(
-                        currentIndex,
-                        item,
-                      );
-                    }),
-
-                  if (extraWords.isNotEmpty)
-                    ...extraWords.map((item) {
-                      final currentIndex = index++;
-
-                      return _buildExtraWordCard(
-                        currentIndex,
-                        item,
-                      );
-                    }),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: confirmReview,
-                child: const Text(
-                  'CONFIRM REVIEW',
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
