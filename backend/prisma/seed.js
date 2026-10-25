@@ -5,7 +5,7 @@ async function main() {
   console.log('Seeding Phil-IRI English reading materials (Grades 4-6)...');
 
   const materials = [
-    // GRADE 4 (from Phil-IRI English Grade 4, page 58)
+
     {
       title: 'The Best Part of the Day',
       gradeLevel: 4,
@@ -61,7 +61,6 @@ async function main() {
       ]
     },
 
-    // GRADE 5 (from Phil-IRI English Grade 5, page 62)
     {
       title: 'Early Start',
       gradeLevel: 5,
@@ -117,7 +116,6 @@ async function main() {
       ]
     },
 
-    // GRADE 6 (from Phil-IRI English Grade 6, page 66)
     {
       title: 'Chameleons',
       gradeLevel: 6,

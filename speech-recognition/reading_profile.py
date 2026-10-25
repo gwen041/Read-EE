@@ -8,7 +8,6 @@ def get_word_reading_level(word_reading_score):
   else:
     return "Frustration"
 
-
 def get_comprehension_level(comprehension_score):
   rounded_score = round(float(comprehension_score))
 
@@ -19,9 +18,7 @@ def get_comprehension_level(comprehension_score):
   else:
     return "Frustration"
 
-
 def get_reading_profile(word_reading_level, comprehension_level):
-  # Phil-IRI Manual 2018 - Table 8 (Student's Reading Profile Per Passage)
   if (
     word_reading_level == "Independent"
     and comprehension_level == "Independent"
@@ -35,7 +32,6 @@ def get_reading_profile(word_reading_level, comprehension_level):
     return "Frustration"
 
   return "Instructional"
-
 
 def get_profile_explanation(word_level, comprehension_level, reading_profile):
   if reading_profile == "Independent":
@@ -65,7 +61,6 @@ def get_profile_explanation(word_level, comprehension_level, reading_profile):
         "They will benefit from guided questions and vocabulary support."
       )
 
-
 def calculate_reading_profile(word_reading_score, comprehension_score):
   word_level = get_word_reading_level(word_reading_score)
   comprehension_level = get_comprehension_level(comprehension_score)
@@ -82,7 +77,6 @@ def calculate_reading_profile(word_reading_score, comprehension_score):
     "reading_profile": reading_profile,
     "explanation": explanation
   }
-
 
 if __name__ == "__main__":
   sample = calculate_reading_profile(93.75, 57)

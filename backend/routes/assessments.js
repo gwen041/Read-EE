@@ -6,7 +6,6 @@ const router = express.Router();
 
 router.use(authMiddleware);
 
-// GET /api/assessments - Get all assessments for the logged-in teacher's students
 router.get('/', async (req, res) => {
   try {
     const assessments = await prisma.assessment.findMany({
@@ -37,7 +36,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /api/assessments - Save a completed assessment to PostgreSQL
 router.post('/', async (req, res) => {
   try {
     const {
@@ -60,7 +58,6 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Verify student belongs to the logged-in teacher
     const student = await prisma.student.findFirst({
       where: {
         id: parsedStudentId,
@@ -76,7 +73,6 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Verify reading material exists and is accessible
     const material = await prisma.readingMaterial.findFirst({
       where: {
         id: parsedMaterialId,
@@ -124,7 +120,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT /api/assessments/:id - Update an assessment after teacher reading verification
 router.put('/:id', async (req, res) => {
   try {
     const assessmentId = Number(req.params.id);
@@ -198,6 +193,42 @@ router.put('/:id', async (req, res) => {
   } catch (error) {
     console.error('Error updating assessment:', error);
     res.status(500).json({ message: 'Failed to update assessment.' });
+  }
+});
+
+router.delete('/:id', async (req, res) => {
+  try {
+    const assessmentId = Number(req.params.id);
+
+    if (!Number.isInteger(assessmentId)) {
+      return res.status(400).json({ message: 'Invalid assessment ID.' });
+    }
+
+    const existing = await prisma.assessment.findFirst({
+      where: {
+        id: assessmentId,
+        student: {
+          classSection: {
+            teacherId: req.teacher.id,
+          },
+        },
+      },
+    });
+
+    if (!existing) {
+      return res.status(404).json({
+        message: 'Assessment not found or access denied.',
+      });
+    }
+
+    await prisma.assessment.delete({
+      where: { id: assessmentId },
+    });
+
+    res.json({ message: 'Assessment deleted successfully.' });
+  } catch (error) {
+    console.error('Error deleting assessment:', error);
+    res.status(500).json({ message: 'Failed to delete assessment.' });
   }
 });
 

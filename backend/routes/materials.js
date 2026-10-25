@@ -4,17 +4,14 @@ const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
 
-// Require logged-in teacher for all materials routes
 router.use(authMiddleware);
 
-// Helper to normalize grade level input
 function parseGrade(grade) {
   if (typeof grade === 'number') return grade;
   const match = String(grade).match(/\d+/);
   return match ? parseInt(match[0], 10) : null;
 }
 
-// 1. GET /api/materials - List available materials (with optional ?gradeLevel=4 filter)
 router.get('/', async (req, res) => {
   try {
     const { gradeLevel } = req.query;
@@ -26,7 +23,6 @@ router.get('/', async (req, res) => {
       ]
     };
 
-    // If gradeLevel is specified, only return materials for that grade
     if (gradeLevel) {
       const parsed = parseGrade(gradeLevel);
       if (parsed) {
@@ -60,7 +56,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 2. GET /api/materials/:id - Get specific material and its 5 questions
 router.get('/:id', async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
@@ -100,7 +95,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// 3. POST /api/materials - Create a teacher material with gradeLevel and 5 questions
 router.post('/', async (req, res) => {
   try {
     const { title, passage, gradeLevel, questions } = req.body;
@@ -119,7 +113,6 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Validate grade level (4, 5, or 6)
     const grade = parseGrade(gradeLevel);
     if (!grade || ![4, 5, 6].includes(grade)) {
       return res.status(400).json({
@@ -128,7 +121,6 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Enforce exactly 5 comprehension questions
     if (!Array.isArray(questions) || questions.length !== 5) {
       return res.status(400).json({
         success: false,
@@ -136,7 +128,6 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Validate each question and choices
     const validatedQuestions = [];
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
@@ -179,7 +170,6 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Save atomically in a Prisma transaction
     const newMaterial = await prisma.$transaction(async (tx) => {
       return await tx.readingMaterial.create({
         data: {
@@ -214,7 +204,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-// 4. DELETE /api/materials/:id - Delete teacher-created material
 router.delete('/:id', async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
@@ -230,7 +219,6 @@ router.delete('/:id', async (req, res) => {
       });
     }
 
-    // Cannot delete built-in materials
     if (material.materialType === 'BUILT_IN') {
       return res.status(403).json({
         success: false,
@@ -238,7 +226,6 @@ router.delete('/:id', async (req, res) => {
       });
     }
 
-    // Teachers can only delete their own materials
     if (material.teacherId !== req.teacher.id) {
       return res.status(403).json({
         success: false,
@@ -246,7 +233,6 @@ router.delete('/:id', async (req, res) => {
       });
     }
 
-    // Check if any assessments are attached to this material
     const assessmentCount = await prisma.assessment.count({
       where: { readingMaterialId: id }
     });
@@ -258,7 +244,6 @@ router.delete('/:id', async (req, res) => {
       });
     }
 
-    // Delete material (questions cascade automatically)
     await prisma.readingMaterial.delete({
       where: { id }
     });

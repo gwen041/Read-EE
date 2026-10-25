@@ -3,9 +3,7 @@ from difflib import SequenceMatcher
 
 from transcribe import transcribe_audio
 
-
 FILLER_WORDS = {"uh", "um", "er", "ah", "hmm", "uhm"}
-
 
 def normalize_words(text):
   words = []
@@ -15,12 +13,10 @@ def normalize_words(text):
       words.append(cleaned)
   return words
 
-
 def word_similarity(w1, w2):
   if w1 == w2:
     return 1.0
   return SequenceMatcher(None, w1, w2).ratio()
-
 
 def generate_explanation(missing, extra, mismatch):
 
@@ -55,20 +51,16 @@ def generate_explanation(missing, extra, mismatch):
     + "."
   )
 
-
 def calculate_accuracy(expected, student, word_timestamps):
 
   expected_words = normalize_words(expected)
 
-  # Build student_words directly from word_timestamps when available
-  # so every student word index is 100% synchronized with its audio timestamp.
   timestamp_words = []
   student_words = []
 
   if word_timestamps:
     for item in word_timestamps:
       raw_token = str(item.get("word", ""))
-      # Split tokens like "E.O." only if needed, keeping the same timestamp
       sub_tokens = [
         t.strip(string.punctuation).lower()
         for t in raw_token.replace(".", " ").split()
@@ -96,7 +88,6 @@ def calculate_accuracy(expected, student, word_timestamps):
   rows = len(expected_words) + 1
   cols = len(student_words) + 1
 
-  # Create the DP table and pointer table for accurate backtracking
   dp = [[0.0] * cols for _ in range(rows)]
   ptr = [[""] * cols for _ in range(rows)]
 
@@ -108,9 +99,6 @@ def calculate_accuracy(expected, student, word_timestamps):
     dp[0][j] = float(j)
     ptr[0][j] = "extra"
 
-  # Fill the DP table using similarity-aware tie-breaking so that:
-  # 1. Similar words (e.g. 'jumped' vs 'jump') pair as 'mismatch' instead of 'extra'
-  # 2. Spoken filler sounds ('uh', 'um') prefer 'extra' instead of stealing expected words
   for i in range(1, rows):
     exp_w = expected_words[i - 1]
     for j in range(1, cols):
@@ -125,7 +113,6 @@ def calculate_accuracy(expected, student, word_timestamps):
       if stu_w in FILLER_WORDS and exp_w not in FILLER_WORDS:
         sub_cost = 1.15
       else:
-        # Slightly favor pairing similar words (e.g. 'jumped' <-> 'jump')
         sub_cost = 1.0 - (0.25 * sim)
 
       deletion = dp[i - 1][j] + 1.0
@@ -259,7 +246,6 @@ def calculate_accuracy(expected, student, word_timestamps):
 
       missing += 1
 
-      # Use the closest surrounding recognized word timestamp.
       prev_ts = None
       next_ts = None
 
@@ -334,7 +320,6 @@ def calculate_accuracy(expected, student, word_timestamps):
 
       extra_words.append(extra_result)
 
-  # Calculate word accuracy
   total_words = (
     correct
     + missing
@@ -392,7 +377,6 @@ def calculate_accuracy(expected, student, word_timestamps):
     print("Extra words:", extra_words)
 
   return result
-
 
 def apply_teacher_corrections(accuracy_result, decisions):
   corrected = dict(accuracy_result)
@@ -478,7 +462,6 @@ def apply_teacher_corrections(accuracy_result, decisions):
   )
 
   return corrected
-
 
 if __name__ == "__main__":
 
