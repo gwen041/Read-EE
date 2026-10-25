@@ -26,6 +26,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<ClassSection> _classes = [];
   List<Assessment> _assessments = [];
   bool _isLoading = true;
+  int _currentTabIndex = 0;
 
   static const Color primaryColor = Color(0xFFF5BE41);
   static const Color textPrimary = Color(0xFF1E293B);
@@ -152,7 +153,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return map;
   }
 
+  void _selectTab(int index) {
+    if (_currentTabIndex == index) return;
+    setState(() {
+      _currentTabIndex = index;
+    });
+    if (index == 0) {
+      _loadDashboardData(showSpinner: false);
+    }
+  }
+
+  Widget _buildCurrentTab() {
+    switch (_currentTabIndex) {
+      case 1:
+        return ClassesScreen(
+          key: ValueKey('classes_${_classes.length}'),
+          classes: _classes,
+        );
+      case 2:
+        return const MaterialsScreen();
+      case 3:
+        return const AssessmentsScreen();
+      default:
+        return _buildMainDashboardContent();
+    }
+  }
+
   Future<void> openClasses() async {
+    final isWideScreen = MediaQuery.of(context).size.width >= 800;
+    if (isWideScreen) {
+      _selectTab(1);
+      return;
+    }
     await Navigator.push(
       context,
       MaterialPageRoute(
@@ -186,6 +218,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void openMaterials() {
+    final isWideScreen = MediaQuery.of(context).size.width >= 800;
+    if (isWideScreen) {
+      _selectTab(2);
+      return;
+    }
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -195,6 +232,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> openAssessments() async {
+    final isWideScreen = MediaQuery.of(context).size.width >= 800;
+    if (isWideScreen) {
+      _selectTab(3);
+      return;
+    }
     await Navigator.push(
       context,
       MaterialPageRoute(
@@ -215,68 +257,52 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           insetPadding: const EdgeInsets.symmetric(horizontal: 36, vertical: 24),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 310),
+            constraints: const BoxConstraints(maxWidth: 340),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
+              padding: const EdgeInsets.fromLTRB(24, 22, 24, 20),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(7),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFEE2E2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.logout_rounded,
-                          color: Color(0xFFEF4444),
-                          size: 18,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      const Text(
-                        'Log Out',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: textPrimary,
-                        ),
-                      ),
-                    ],
+                  const Text(
+                    'Log Out',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFFEF4444),
+                    ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
                   const Text(
                     'Are you sure you want to log out of READ-EE?',
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 14,
                       color: textSecondary,
-                      height: 1.35,
+                      height: 1.4,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 22),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                         child: const Text(
                           'Cancel',
                           style: TextStyle(
                             color: textSecondary,
-                            fontSize: 13,
+                            fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 10),
                       ElevatedButton(
                         onPressed: () {
                           Navigator.pop(context);
@@ -286,9 +312,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           backgroundColor: const Color(0xFFEF4444),
                           foregroundColor: Colors.white,
                           elevation: 0,
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -296,7 +320,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         child: const Text(
                           'Log Out',
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -365,7 +389,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text(
-                                  'Classes & Rosters',
+                                  'Classes',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -400,7 +424,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         )
                       else ...[
-                        // Grade selection tabs
+
                         SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: Row(
@@ -532,7 +556,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             elevation: 0,
                           ),
                           child: const Text(
-                            'MANAGE CLASSES & ROSTERS',
+                            'MANAGE CLASSES',
                             style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -549,7 +573,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _showAssessmentsBreakdownModal() {
-    final todayCount = todayAssessmentsCount;
+    final total = totalAssessments;
+    final today = todayAssessmentsCount;
+    final verified = _assessments.where((a) => a.isVerified).length;
+
+    double avgAccuracy = 0;
+    double avgWpm = 0;
+    double avgComp = 0;
+
+    if (total > 0) {
+      final sumAcc = _assessments.fold<double>(0, (sum, a) => sum + a.accuracy);
+      final sumWpm = _assessments.fold<double>(0, (sum, a) => sum + a.wpm);
+      final sumComp = _assessments.fold<double>(0, (sum, a) => sum + a.comprehension);
+      avgAccuracy = sumAcc / total;
+      avgWpm = sumWpm / total;
+      avgComp = sumComp / total;
+    }
+
+    final latestAssessment = _assessments.isNotEmpty ? _assessments.first : null;
+
     showDialog(
       context: context,
       builder: (context) {
@@ -558,9 +600,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 340),
+            constraints: const BoxConstraints(maxWidth: 390),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -568,23 +610,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(7),
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: const Color(0xFFD97706).withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(
-                          Icons.assignment_turned_in_outlined,
+                          Icons.assessment_rounded,
                           color: Color(0xFFD97706),
-                          size: 18,
+                          size: 20,
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
+                      const SizedBox(width: 12),
+                      const Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Assessments Overview',
                               style: TextStyle(
                                 fontSize: 16,
@@ -592,83 +634,246 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 color: textPrimary,
                               ),
                             ),
+                            SizedBox(height: 2),
                             Text(
-                              '$totalAssessments total assessments recorded',
-                              style: const TextStyle(fontSize: 11, color: textSecondary),
+                              'High-level summary of oral reading records',
+                              style: TextStyle(fontSize: 11, color: textSecondary),
                             ),
                           ],
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close, size: 18, color: textSecondary),
+                        icon: const Icon(Icons.close_rounded, size: 20, color: textSecondary),
                         onPressed: () => Navigator.pop(context),
-                        splashRadius: 16,
+                        splashRadius: 18,
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 14),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFAF9F5),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(7),
-                          decoration: BoxDecoration(
-                            color: todayCount > 0
-                                ? const Color(0xFF10B981).withValues(alpha: 0.15)
-                                : const Color(0xFF94A3B8).withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            todayCount > 0 ? Icons.today : Icons.event_available_outlined,
-                            color: todayCount > 0 ? const Color(0xFF059669) : const Color(0xFF64748B),
-                            size: 16,
-                          ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildOverviewStatTile(
+                          label: 'Total Sessions',
+                          value: '$total',
+                          color: const Color(0xFFD97706),
+                          bgColor: const Color(0xFFFEF3C7),
+                          icon: Icons.assignment_outlined,
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _buildOverviewStatTile(
+                          label: "Today's Sessions",
+                          value: '$today',
+                          color: const Color(0xFF059669),
+                          bgColor: const Color(0xFFD1FAE5),
+                          icon: Icons.today_rounded,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _buildOverviewStatTile(
+                          label: 'Verified',
+                          value: '$verified',
+                          color: const Color(0xFF2563EB),
+                          bgColor: const Color(0xFFDBEAFE),
+                          icon: Icons.verified_outlined,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  if (total > 0) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFAF9F5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'AVERAGE READING PERFORMANCE',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                              color: textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
                             children: [
-                              const Text(
-                                "Today's Reading Sessions",
-                                style: TextStyle(
-                                  fontSize: 13,
+                              Expanded(
+                                child: _buildOverviewMetricChip(
+                                  label: 'Accuracy',
+                                  value: '${avgAccuracy.toStringAsFixed(1)}%',
+                                  sublabel: Assessment.getWordReadingLevel(avgAccuracy),
+                                ),
+                              ),
+                              Container(
+                                width: 1,
+                                height: 32,
+                                color: const Color(0xFFE2E8F0),
+                              ),
+                              Expanded(
+                                child: _buildOverviewMetricChip(
+                                  label: 'Speed',
+                                  value: '${avgWpm.round()}',
+                                  sublabel: 'WPM',
+                                ),
+                              ),
+                              Container(
+                                width: 1,
+                                height: 32,
+                                color: const Color(0xFFE2E8F0),
+                              ),
+                              Expanded(
+                                child: _buildOverviewMetricChip(
+                                  label: 'Comprehension',
+                                  value: '${avgComp.round()}%',
+                                  sublabel: Assessment.getComprehensionLevel(avgComp),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (latestAssessment != null) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 15,
+                              backgroundColor: accentColor,
+                              child: Text(
+                                latestAssessment.studentName.isNotEmpty
+                                    ? latestAssessment.studentName[0].toUpperCase()
+                                    : 'S',
+                                style: const TextStyle(
+                                  fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                   color: textPrimary,
                                 ),
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                todayCount > 0
-                                    ? '$todayCount reading sessions conducted today'
-                                    : 'No sessions conducted today yet',
-                                style: const TextStyle(fontSize: 11, color: textSecondary),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          latestAssessment.studentName,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: textPrimary,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      const Text(
+                                        '• Latest',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                          color: textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    latestAssessment.materialTitle.isNotEmpty
+                                        ? latestAssessment.materialTitle
+                                        : 'Reading Material',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: textSecondary,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(width: 8),
+                            _buildOverviewProfileBadge(latestAssessment.readingProfile),
+                          ],
                         ),
-                      ],
+                      ),
+                    ],
+                  ] else ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFAF9F5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: const Column(
+                        children: [
+                          Icon(
+                            Icons.auto_stories_outlined,
+                            size: 32,
+                            color: textSecondary,
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'No Assessments Yet',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: textPrimary,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Select a student to conduct your first reading assessment.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 11, color: textSecondary, height: 1.3),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 14),
+                  ],
+                  const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
+                    height: 42,
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.pop(context);
                         openAssessments();
                       },
                       style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        backgroundColor: primaryColor,
+                        foregroundColor: textPrimary,
                         elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: const Text(
                         'VIEW ASSESSMENT HISTORY',
@@ -682,6 +887,121 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildOverviewStatTile({
+    required String label,
+    required String value,
+    required Color color,
+    required Color bgColor,
+    required IconData icon,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      decoration: BoxDecoration(
+        color: bgColor.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 14, color: color),
+              const Spacer(),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: textSecondary,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOverviewMetricChip({
+    required String label,
+    required String value,
+    required String sublabel,
+  }) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: textPrimary,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: textSecondary,
+          ),
+        ),
+        const SizedBox(height: 1),
+        Text(
+          sublabel,
+          style: const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: textPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOverviewProfileBadge(String profile) {
+    Color bg;
+    Color fg;
+    if (profile == 'Independent') {
+      bg = const Color(0xFFD1FAE5);
+      fg = const Color(0xFF047857);
+    } else if (profile == 'Instructional') {
+      bg = const Color(0xFFDBEAFE);
+      fg = const Color(0xFF1D4ED8);
+    } else {
+      bg = const Color(0xFFFFEDD5);
+      fg = const Color(0xFFC2410C);
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        profile,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          color: fg,
+        ),
+      ),
     );
   }
 
@@ -781,56 +1101,62 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
             const SizedBox(height: 10),
 
-            // Navigation Links
             _buildSidebarItem(
               icon: Icons.dashboard_rounded,
               label: 'Dashboard',
-              isActive: true,
+              isActive: isDrawer ? false : _currentTabIndex == 0,
               onTap: () {
-                if (isDrawer) Navigator.pop(context);
-              },
-            ),
-            _buildSidebarItem(
-              icon: Icons.mic_rounded,
-              label: 'Start Assessment',
-              isActive: false,
-              onTap: () {
-                if (isDrawer) Navigator.pop(context);
-                openReadingAssessment();
+                if (isDrawer) {
+                  Navigator.pop(context);
+                  _selectTab(0);
+                } else {
+                  _selectTab(0);
+                }
               },
             ),
             _buildSidebarItem(
               icon: Icons.groups_rounded,
               label: 'My Classes',
-              isActive: false,
+              isActive: isDrawer ? false : _currentTabIndex == 1,
               onTap: () {
-                if (isDrawer) Navigator.pop(context);
-                openClasses();
+                if (isDrawer) {
+                  Navigator.pop(context);
+                  openClasses();
+                } else {
+                  _selectTab(1);
+                }
               },
             ),
             _buildSidebarItem(
               icon: Icons.menu_book_rounded,
               label: 'Reading Materials',
-              isActive: false,
+              isActive: isDrawer ? false : _currentTabIndex == 2,
               onTap: () {
-                if (isDrawer) Navigator.pop(context);
-                openMaterials();
+                if (isDrawer) {
+                  Navigator.pop(context);
+                  openMaterials();
+                } else {
+                  _selectTab(2);
+                }
               },
             ),
             _buildSidebarItem(
               icon: Icons.history_rounded,
               label: 'Assessment History',
-              isActive: false,
+              isActive: isDrawer ? false : _currentTabIndex == 3,
               onTap: () {
-                if (isDrawer) Navigator.pop(context);
-                openAssessments();
+                if (isDrawer) {
+                  Navigator.pop(context);
+                  openAssessments();
+                } else {
+                  _selectTab(3);
+                }
               },
             ),
 
             const Spacer(),
             const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
 
-            // Teacher identity & logout
             Padding(
               padding: const EdgeInsets.all(12.0),
               child: Container(
@@ -966,7 +1292,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildProfileMetricCard({
+  Widget _buildClassificationMetricCard({
     required String label,
     required int count,
     required Color color,
@@ -1005,7 +1331,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildDifficultyItem({
+  Widget _buildProfileItem({
     required String label,
     required int count,
     required Color color,
@@ -1052,313 +1378,257 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildMainDashboardContent() {
     final teacherName = AuthService.currentTeacher?['fullName'] ?? 'Teacher';
-    final assessedCount = uniqueAssessedStudentsCount;
-    final pendingCount = (totalStudents - assessedCount).clamp(0, totalStudents);
-    final percent = assessmentProgressPercent;
     final profiles = readingProfilesCount;
     final classifications = classificationsCount;
 
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 760),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 16.0,
-            vertical: 14.0,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Welcome Card
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Welcome back, $teacherName!',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    const Text(
-                      'Oral Reading Assessment & Difficulty Classifier',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
+        constraints: const BoxConstraints(maxWidth: 1040),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isDesktop = constraints.maxWidth >= 840;
 
-              // Two Top Stat Cards
-              Row(
+            final difficultyCard = Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: _buildStatCard(
-                      icon: Icons.class_outlined,
-                      title: 'Classes',
-                      value: '${_classes.length}',
-                      subtitle: _classes.length == 1
-                          ? '1 Section'
-                          : '${_classes.length} Sections',
-                      iconColor: const Color(0xFF3B82F6),
-                      onTap: _showClassesBreakdownModal,
+                  const Text(
+                    'Difficulty Classification',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: textPrimary,
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _buildStatCard(
-                      icon: Icons.assignment_turned_in_outlined,
-                      title: 'Assessments',
-                      value: '$totalAssessments',
-                      subtitle: todayAssessmentsCount > 0
-                          ? '$todayAssessmentsCount Today'
-                          : '0 Today',
-                      iconColor: const Color(0xFFD97706),
-                      onTap: _showAssessmentsBreakdownModal,
+                  const SizedBox(height: 2),
+                  const Text(
+                    'Primary reading difficulty diagnosed via Decision Tree model',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildClassificationMetricCard(
+                          label: 'Normal',
+                          count: classifications['Normal'] ?? 0,
+                          color: const Color(0xFF10B981),
+                          bg: const Color(0xFFECFDF5),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _buildClassificationMetricCard(
+                          label: 'Decoding',
+                          count: classifications['Decoding'] ?? 0,
+                          color: const Color(0xFF3B82F6),
+                          bg: const Color(0xFFEFF6FF),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildClassificationMetricCard(
+                          label: 'Fluency',
+                          count: classifications['Fluency'] ?? 0,
+                          color: const Color(0xFFF59E0B),
+                          bg: const Color(0xFFFFFBEB),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _buildClassificationMetricCard(
+                          label: 'Comprehension',
+                          count: classifications['Comprehension'] ?? 0,
+                          color: const Color(0xFFEF4444),
+                          bg: const Color(0xFFFEF2F2),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+
+            final profilesCard = Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Phil-IRI Reading Profiles',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  const Text(
+                    'Word reading and comprehension profile levels',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFAF9F5),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildProfileItem(
+                          label: 'Independent Level',
+                          count: profiles['Independent'] ?? 0,
+                          color: const Color(0xFF10B981),
+                        ),
+                        const Divider(height: 12, thickness: 1, color: Color(0xFFE2E8F0)),
+                        _buildProfileItem(
+                          label: 'Instructional Level',
+                          count: profiles['Instructional'] ?? 0,
+                          color: const Color(0xFFD97706),
+                        ),
+                        const Divider(height: 12, thickness: 1, color: Color(0xFFE2E8F0)),
+                        _buildProfileItem(
+                          label: 'Frustration Level',
+                          count: profiles['Frustration'] ?? 0,
+                          color: const Color(0xFFEF4444),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+            );
 
-              // Section 1: Assessment Coverage
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+            final actionButton = SizedBox(
+              width: double.infinity,
+              height: 46,
+              child: ElevatedButton.icon(
+                onPressed: openClasses,
+                icon: const Icon(Icons.groups_rounded, size: 20),
+                label: const Text(
+                  'SELECT STUDENT TO ASSESS',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              ),
+            );
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 14.0,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Assessment Coverage',
-                          style: TextStyle(
-                            fontSize: 14,
+                        Text(
+                          'Welcome back, $teacherName!',
+                          style: const TextStyle(
+                            fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: textPrimary,
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF8B5CF6).withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            '$percent% Tested',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF8B5CF6),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: LinearProgressIndicator(
-                        value: totalStudents > 0 ? (assessedCount / totalStudents) : 0,
-                        minHeight: 8,
-                        backgroundColor: const Color(0xFFF1F5F9),
-                        valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '$assessedCount of $totalStudents Students Assessed',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: Color(0xFF059669),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          '$pendingCount Pending',
-                          style: const TextStyle(
-                            fontSize: 11,
+                        const SizedBox(height: 3),
+                        const Text(
+                          'Oral Reading Assessment & Difficulty Classifier',
+                          style: TextStyle(
+                            fontSize: 13,
                             color: textSecondary,
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Section 2: Phil-IRI Reading Profiles
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Phil-IRI Reading Profiles',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: textPrimary,
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatCard(
+                          icon: Icons.class_outlined,
+                          title: 'Classes',
+                          value: '${_classes.length}',
+                          subtitle: _classes.length == 1
+                              ? '1 Section'
+                              : '${_classes.length} Sections',
+                          iconColor: const Color(0xFF3B82F6),
+                          onTap: _showClassesBreakdownModal,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    const Text(
-                      'Word reading and comprehension profile levels',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: textSecondary,
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _buildStatCard(
+                          icon: Icons.assignment_turned_in_outlined,
+                          title: 'Assessments',
+                          value: '$totalAssessments',
+                          subtitle: todayAssessmentsCount > 0
+                              ? '$todayAssessmentsCount Today'
+                              : '0 Today',
+                          iconColor: const Color(0xFFD97706),
+                          onTap: _showAssessmentsBreakdownModal,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  if (isDesktop) ...[
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: _buildProfileMetricCard(
-                            label: 'Independent',
-                            count: profiles['Independent'] ?? 0,
-                            color: const Color(0xFF10B981),
-                            bg: const Color(0xFFECFDF5),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _buildProfileMetricCard(
-                            label: 'Instructional',
-                            count: profiles['Instructional'] ?? 0,
-                            color: const Color(0xFFD97706),
-                            bg: const Color(0xFFFFFBEB),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _buildProfileMetricCard(
-                            label: 'Frustration',
-                            count: profiles['Frustration'] ?? 0,
-                            color: const Color(0xFFEF4444),
-                            bg: const Color(0xFFFEF2F2),
-                          ),
-                        ),
+                        Expanded(child: difficultyCard),
+                        const SizedBox(width: 16),
+                        Expanded(child: profilesCard),
                       ],
                     ),
+                    const SizedBox(height: 16),
+                    actionButton,
+                  ] else ...[
+                    difficultyCard,
+                    const SizedBox(height: 16),
+                    profilesCard,
+                    const SizedBox(height: 18),
+                    actionButton,
                   ],
-                ),
+                  const SizedBox(height: 20),
+                ],
               ),
-              const SizedBox(height: 16),
-
-              // Section 3: Primary Difficulty Classification
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Difficulty Classification',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    const Text(
-                      'Primary reading difficulty diagnosed via Decision Tree model',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFAF9F5),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      child: Column(
-                        children: [
-                          _buildDifficultyItem(
-                            label: 'Normal Reading Performance',
-                            count: classifications['Normal'] ?? 0,
-                            color: const Color(0xFF10B981),
-                          ),
-                          const Divider(height: 12, thickness: 1, color: Color(0xFFE2E8F0)),
-                          _buildDifficultyItem(
-                            label: 'Decoding Difficulty',
-                            count: classifications['Decoding'] ?? 0,
-                            color: const Color(0xFF3B82F6),
-                          ),
-                          const Divider(height: 12, thickness: 1, color: Color(0xFFE2E8F0)),
-                          _buildDifficultyItem(
-                            label: 'Fluency Difficulty',
-                            count: classifications['Fluency'] ?? 0,
-                            color: const Color(0xFFF59E0B),
-                          ),
-                          const Divider(height: 12, thickness: 1, color: Color(0xFFE2E8F0)),
-                          _buildDifficultyItem(
-                            label: 'Comprehension Difficulty',
-                            count: classifications['Comprehension'] ?? 0,
-                            color: const Color(0xFFEF4444),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 18),
-
-              // Prominent Action Button
-              SizedBox(
-                width: double.infinity,
-                height: 46,
-                child: ElevatedButton.icon(
-                  onPressed: openReadingAssessment,
-                  icon: const Icon(Icons.mic_rounded, size: 20),
-                  label: const Text(
-                    'START READING ASSESSMENT',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -1392,7 +1662,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : _buildMainDashboardContent(),
+                : (isWideScreen
+                    ? _buildCurrentTab()
+                    : _buildMainDashboardContent()),
           ),
         ],
       ),
