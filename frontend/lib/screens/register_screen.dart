@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../dialogs/privacy_policy_dialog.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
 import 'teacher_setup_screen.dart';
@@ -229,7 +230,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        const Text(
+                          'By continuing, you agree to our ',
+                          style: TextStyle(fontSize: 12, color: textSecondary),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => const PrivacyPolicyDialog(),
+                            );
+                          },
+                          child: const Text(
+                            'Privacy Policy',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: textPrimary,
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../dialogs/privacy_policy_dialog.dart';
 import 'login_screen.dart';
 import 'register_screen.dart';
 
@@ -26,6 +27,13 @@ class LandingScreen extends StatelessWidget {
       MaterialPageRoute(
         builder: (context) => const LoginScreen(),
       ),
+    );
+  }
+
+  void _showPrivacyPolicy(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const PrivacyPolicyDialog(),
     );
   }
 
@@ -365,6 +373,19 @@ class LandingScreen extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 36),
+                TextButton(
+                  onPressed: () => _showPrivacyPolicy(context),
+                  child: const Text(
+                    'Privacy Policy',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: textSecondary,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
                 ),
               ],
             ),
