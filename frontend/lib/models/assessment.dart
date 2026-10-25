@@ -5,13 +5,25 @@ class Assessment {
   final String passage;
   final DateTime date;
 
-  final double initialAccuracy;
   final double accuracy;
   final double wpm;
   final double comprehension;
   final String classification;
-
   final bool isVerified;
+
+  final double initialAccuracy;
+  final double? initialWpm;
+  final double? initialComprehension;
+  final String? initialClassification;
+  final String? initialReadingProfile;
+
+  final int? gradeLevel;
+  final String? sectionName;
+  final int? studentId;
+  final int? readingMaterialId;
+  final String? audioPath;
+  final Map<String, dynamic>? accuracyDetails;
+  final Map<String, dynamic>? comprehensionDetails;
 
   Assessment({
     this.id,
@@ -20,11 +32,22 @@ class Assessment {
     required this.passage,
     required this.date,
     required this.initialAccuracy,
+    this.initialWpm,
+    this.initialComprehension,
+    this.initialClassification,
+    this.initialReadingProfile,
     required this.accuracy,
     required this.wpm,
     required this.comprehension,
     required this.classification,
     required this.isVerified,
+    this.gradeLevel,
+    this.sectionName,
+    this.studentId,
+    this.readingMaterialId,
+    this.audioPath,
+    this.accuracyDetails,
+    this.comprehensionDetails,
   });
 
   static String getWordReadingLevel(double wordReadingScore) {
@@ -99,24 +122,113 @@ class Assessment {
   String get comprehensionLevel => getComprehensionLevel(comprehension);
   String get readingProfile => getReadingProfile(accuracy, comprehension);
   String get readingProfileExplanation =>
-      getProfileExplanation(accuracy, comprehension);
+    getProfileExplanation(accuracy, comprehension);
   String get classificationExplanation =>
-      getClassificationExplanation(classification);
+    getClassificationExplanation(classification);
+
+  String get displayClassification =>
+    classification.isNotEmpty ? classification : 'Normal';
+  String get initialDisplayClassification =>
+    (initialClassification != null && initialClassification!.isNotEmpty)
+      ? initialClassification!
+      : displayClassification;
+
+  String get initialReadingProfileFormatted =>
+    initialReadingProfile ??
+    getReadingProfile(initialAccuracy, initialComprehension ?? comprehension);
+
+  String get formattedSection {
+    if (sectionName == null || sectionName!.trim().isEmpty) return '';
+    final name = sectionName!.trim();
+    return name.toLowerCase().startsWith('section') ? name : 'Section $name';
+  }
+
+  String get gradeAndSection {
+    final g = gradeLevel != null ? 'Grade $gradeLevel' : '';
+    final s = formattedSection;
+    if (g.isNotEmpty && s.isNotEmpty) return '$g - $s';
+    if (g.isNotEmpty) return g;
+    return s;
+  }
+
+  bool get hasErrorsToVerify {
+    if (accuracyDetails == null) return false;
+    final mismatches = accuracyDetails!['mismatch_words'] as List?;
+    final missing = accuracyDetails!['missing_words'] as List?;
+    final extra = accuracyDetails!['extra_words'] as List?;
+    return (mismatches?.isNotEmpty ?? false) ||
+        (missing?.isNotEmpty ?? false) ||
+        (extra?.isNotEmpty ?? false);
+  }
+
+  int get totalErrorsCount {
+    if (accuracyDetails == null) return 0;
+    final mismatches =
+        (accuracyDetails!['mismatch_words'] as List?)?.length ?? 0;
+    final missing =
+        (accuracyDetails!['missing_words'] as List?)?.length ?? 0;
+    final extra =
+        (accuracyDetails!['extra_words'] as List?)?.length ?? 0;
+    return mismatches + missing + extra;
+  }
 
   factory Assessment.fromJson(Map<String, dynamic> json) {
     final student = json['student'] as Map<String, dynamic>?;
+    final classSection = student?['classSection'] as Map<String, dynamic>?;
     final material = json['readingMaterial'] as Map<String, dynamic>?;
     final accuracyDetails = json['accuracyDetails'] as Map<String, dynamic>?;
+    final comprehensionDetails =
+        json['comprehensionDetails'] as Map<String, dynamic>?;
 
     final finalAccuracy = (json['accuracy'] as num).toDouble();
     final initialAccuracy = accuracyDetails != null &&
             accuracyDetails['initialAccuracy'] != null
         ? (accuracyDetails['initialAccuracy'] as num).toDouble()
         : finalAccuracy;
+
+    final initialWpm = accuracyDetails != null &&
+            accuracyDetails['initialWpm'] != null
+        ? (accuracyDetails['initialWpm'] as num).toDouble()
+        : (json['wpm'] as num).toDouble();
+
+    final initialComprehension = accuracyDetails != null &&
+            accuracyDetails['initialComprehension'] != null
+        ? (accuracyDetails['initialComprehension'] as num).toDouble()
+        : (json['comprehensionScore'] as num).toDouble();
+
+    final initialClassification = accuracyDetails != null &&
+            accuracyDetails['initialClassification'] != null
+        ? accuracyDetails['initialClassification'].toString()
+        : json['classification']?.toString();
+
+    final initialReadingProfile = accuracyDetails != null &&
+            accuracyDetails['initialReadingProfile'] != null
+        ? accuracyDetails['initialReadingProfile'].toString()
+        : null;
+
     final isVerified = accuracyDetails != null &&
             accuracyDetails['isVerified'] != null
         ? accuracyDetails['isVerified'] as bool
         : false;
+
+    final audioPath = accuracyDetails?['audioPath']?.toString();
+
+    int? gradeLevel;
+    if (classSection?['gradeLevel'] != null) {
+      gradeLevel = int.tryParse(classSection!['gradeLevel'].toString());
+    } else if (material?['gradeLevel'] != null) {
+      gradeLevel = int.tryParse(material!['gradeLevel'].toString());
+    } else if (json['gradeLevel'] != null) {
+      gradeLevel = int.tryParse(json['gradeLevel'].toString());
+    }
+
+    final sectionName = classSection?['sectionName']?.toString() ??
+        json['sectionName']?.toString();
+
+    final studentId = json['studentId'] as int? ??
+        (student?['id'] as int?);
+    final readingMaterialId = json['readingMaterialId'] as int? ??
+        (material?['id'] as int?);
 
     return Assessment(
       id: json['id'] as int?,
@@ -133,11 +245,22 @@ class Assessment {
           ? DateTime.parse(json['createdAt'].toString()).toLocal()
           : DateTime.now(),
       initialAccuracy: initialAccuracy,
+      initialWpm: initialWpm,
+      initialComprehension: initialComprehension,
+      initialClassification: initialClassification,
+      initialReadingProfile: initialReadingProfile,
       accuracy: finalAccuracy,
       wpm: (json['wpm'] as num).toDouble(),
       comprehension: (json['comprehensionScore'] as num).toDouble(),
       classification: json['classification']?.toString() ?? '',
       isVerified: isVerified,
+      gradeLevel: gradeLevel,
+      sectionName: sectionName,
+      studentId: studentId,
+      readingMaterialId: readingMaterialId,
+      audioPath: audioPath,
+      accuracyDetails: accuracyDetails,
+      comprehensionDetails: comprehensionDetails,
     );
   }
 }

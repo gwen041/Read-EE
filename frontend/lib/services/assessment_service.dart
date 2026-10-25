@@ -51,7 +51,6 @@ class AssessmentService {
     return jsonDecode(responseBody) as Map<String, dynamic>;
   }
 
-  // Finalize assessment after teacher verification.
   static Future<Map<String, dynamic>> finalizeAssessment({
     required Map<String, dynamic> accuracy,
     required Map<String, dynamic> wpm,
@@ -87,7 +86,6 @@ class AssessmentService {
     return jsonDecode(response.body) as Map<String, dynamic>;
   }
 
-  // Fetch all saved assessments for the logged-in teacher from PostgreSQL.
   static Future<List<Assessment>> getAssessments() async {
     final response = await http.get(
       Uri.parse('$baseUrl/api/assessments'),
@@ -106,7 +104,6 @@ class AssessmentService {
         .toList();
   }
 
-  // Save a completed assessment to PostgreSQL.
   static Future<Assessment> saveAssessment({
     required int studentId,
     required int readingMaterialId,
@@ -141,7 +138,6 @@ class AssessmentService {
     return Assessment.fromJson(data['assessment'] as Map<String, dynamic>);
   }
 
-  // Update an existing assessment in PostgreSQL after teacher verification.
   static Future<Assessment> updateAssessment({
     required int assessmentId,
     required double accuracy,
@@ -171,5 +167,17 @@ class AssessmentService {
     }
 
     return Assessment.fromJson(data['assessment'] as Map<String, dynamic>);
+  }
+
+  static Future<void> deleteAssessment(int assessmentId) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/api/assessments/$assessmentId'),
+      headers: AuthService.authHeaders,
+    );
+
+    if (response.statusCode != 200) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      throw Exception(data['message'] ?? 'Failed to delete assessment.');
+    }
   }
 }
