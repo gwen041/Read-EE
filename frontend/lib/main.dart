@@ -5,6 +5,7 @@ import 'screens/landing_screen.dart';
 import 'services/auth_service.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   AuthService.init();
   runApp(const ReadEEApp());
 }
