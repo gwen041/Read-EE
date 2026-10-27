@@ -1,11 +1,11 @@
 {
-    "name": "frontend",
-    "short_name": "frontend",
+    "name": "READ-EE",
+    "short_name": "READ-EE",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#F5BE41",
+    "theme_color": "#F5BE41",
+    "description": "READ-EE: Oral Reading Difficulty Classification Tool",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
