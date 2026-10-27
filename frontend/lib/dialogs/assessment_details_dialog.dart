@@ -717,37 +717,21 @@ class AssessmentDetailsDialog extends StatelessWidget {
                               ),
                             )
                           else
-                            Row(
+                            const Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.check_circle_rounded,
                                   size: 15,
                                   color: Color(0xFF047857),
                                 ),
-                                const SizedBox(width: 6),
-                                const Expanded(
+                                SizedBox(width: 6),
+                                Expanded(
                                   child: Text(
                                     'Teacher verified: Error decisions applied to final calculation.',
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: Color(0xFF047857),
                                       fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                                TextButton.icon(
-                                  onPressed: () =>
-                                      onVerifyRequest(assessment),
-                                  icon: const Icon(Icons.edit_note_rounded,
-                                      size: 15),
-                                  label: const Text(
-                                    'Re-verify',
-                                    style: TextStyle(fontSize: 11),
-                                  ),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: const Color(0xFF047857),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
                                     ),
                                   ),
                                 ),

@@ -603,7 +603,10 @@ class _ResultsScreenState extends State<ResultsScreen> {
               children: [
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
                     color: color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
@@ -613,15 +616,21 @@ class _ResultsScreenState extends State<ResultsScreen> {
                     children: [
                       const Text(
                         'Overall Reading Profile',
+                        textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 12, color: textSecondary),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        overallProfile.toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: color,
+                      const SizedBox(height: 6),
+                      SizedBox(
+                        width: double.infinity,
+                        child: Text(
+                          overallProfile.toUpperCase(),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: color,
+                            height: 1.25,
+                          ),
                         ),
                       ),
                     ],
@@ -780,7 +789,10 @@ class _ResultsScreenState extends State<ResultsScreen> {
               children: [
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
                     color: color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
@@ -790,15 +802,21 @@ class _ResultsScreenState extends State<ResultsScreen> {
                     children: [
                       const Text(
                         'Classification',
+                        textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 12, color: textSecondary),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        getShortClassificationLabel(classification),
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: color,
+                      const SizedBox(height: 6),
+                      SizedBox(
+                        width: double.infinity,
+                        child: Text(
+                          getShortClassificationLabel(classification),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: color,
+                            height: 1.25,
+                          ),
                         ),
                       ),
                     ],

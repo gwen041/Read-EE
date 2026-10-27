@@ -89,7 +89,8 @@ class PrivacyPolicyDialog extends StatelessWidget {
                       body:
                           'Voice recordings captured during assessment sessions are processed exclusively for educational evaluation:\n\n'
                           '• Automated speech recognition processes the audio to identify word omissions, substitutions, and reading pace.\n'
-                          '• Audio recordings are accessible to the student\'s teacher for listening, verification, and manual corrections.\n'
+                          '• Audio recordings are accessible to the student\'s teacher for listening, verification, and manual corrections during the active assessment session.\n'
+                          '• Voice recordings are transient and deleted once assessment results are confirmed to protect learner privacy and minimize storage overhead.\n'
                           '• Voice data is never sold, shared with third-party advertisers, or used for commercial profiling.',
                     ),
                     _buildSection(
@@ -105,13 +106,14 @@ class PrivacyPolicyDialog extends StatelessWidget {
                       body:
                           '• All data transmitted between the application and backend services is encrypted using HTTPS and TLS standards.\n'
                           '• Class records and student data are isolated so that each teacher only accesses their own classes and students.\n'
-                          '• Passwords and authentication credentials are encrypted using secure industry-standard hashing.',
+                          '• Passwords and authentication credentials are encrypted using secure industry-standard hashing.\n'
+                          '• Audio recordings are deleted immediately following assessment finalization, retaining only structured numerical and textual miscue data in the database.',
                     ),
                     _buildSection(
                       title: '5. Your Rights and Data Control',
                       body:
                           'Educators have complete ownership and control over the data stored in READ-EE:\n\n'
-                          '• Access: You may review student reading histories, scores, and audio recordings at any time.\n'
+                          '• Access: You may review student reading histories, scores, and miscue analytics at any time.\n'
                           '• Rectification: You can update student details and override automated speech assessment results.\n'
                           '• Erasure: You can permanently delete student profiles, classes, or assessment records directly from the application.',
                     ),
